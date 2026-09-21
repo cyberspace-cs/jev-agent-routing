@@ -92,6 +92,110 @@ print(result.level)  # "high"
 
 ---
 
+## 🏛️ 四层架构（腾讯工程实践视角）
+
+> 参考腾讯技术工程《一万字 Jev 工程实践长文》：把 Agent 的"判断题"从大模型里拆出来。
+
+| 层次 | 职责 | 典型组件 |
+| --- | --- | --- |
+| **慢思考层** | 规划、解释、生成、复杂推理 | GPT / Claude / Gemini |
+| **快判断层** | 路由、筛选、评分、门禁 | Jev / Jev-like 模型 |
+| **确定性层** | 权限、状态、副作用、回滚 | 普通代码 |
+| **兜底层** | 高风险或低置信度处理 | 人工 / 更强模型 |
+
+**核心观点**：Jev 不是"更便宜的 GPT"，它是 Agent 的**反射神经**。
+Agent 里很多模型调用不是为了生成答案，而是为了替代码做一次判断。
+把这些高频、封闭、可回退的判断从生成链路里拆出来，系统就变成"生成负责表达，判断负责分流，代码负责执行"。
+
+---
+
+## 🧹 上下文压缩（fast-jev-compaction 风格）
+
+> 这是腾讯文章里最有工程参考价值的案例：不做"大模型总结历史"，而是用 Jev 对每个工具调用做窄判断。
+
+### 为什么不用传统 summary？
+
+传统 summary（让大模型把旧历史改写成一段短文本）有三个问题：
+
+1. **生成成本和判断需求不匹配** — 只想知道"这段日志还要不要留"，却要启动一次完整生成
+2. **摘要会破坏可复核性** — 文件路径、错误码、栈信息被"概括"成"差不多"，对 coding agent 是灾难
+3. **置信度没进代码分支** — 大模型说"我有 80% 把握"只是文本描述，不是校准过的概率
+
+### Jev 的做法：两个 Noul，三种动作
+
+对每个 `tool_use` + `tool_result` 配对，问两个独立问题：
+
+```
+keepCall:    这个工具调用本身还重要吗？       → Noul 概率
+keepResult:  这个工具结果全文还需要保留吗？   → Noul 概率
+```
+
+两个概率组合出三种动作：
+
+| 动作 | 条件 | 处理方式 |
+| --- | --- | --- |
+| `keep` | keepResult ≥ threshold | 调用和结果都完整保留 |
+| `drop_result` | keepResult < threshold 且 keepCall ≥ threshold | 保留调用，截断结果 |
+| `drop_call` | 两者都低 | 调用和结果一起删除 |
+
+### 三层架构
+
+| 层次 | 做什么 | 为什么重要 |
+| --- | --- | --- |
+| **对象层** | 把 `tool_use` 和 `tool_result` 按 `tool_use_id` 配成一组 | 避免留下孤立调用或孤立结果 |
+| **判断层** | 为每组工具历史生成 keepCall / keepResult 两个 Noul | 把复合压缩任务拆成两个窄判断 |
+| **执行层** | 根据阈值执行 keep / drop_result / drop_call | 让压缩动作可测试、可回退、可统计 |
+
+### 关键工程约束
+
+- **用户文本和助手文本不改写** — 里面有原始需求和硬约束，改写会变味
+- **只处理工具调用和工具结果** — 它们占空间最大，也最容易过期
+- **pinned 保护** — 首条消息和最近 N 条消息不参与删除
+- **不发完整结果给 Jev** — 只发摘要：`"ok, 4213 chars (omitted)"` / `"error, 830 chars (omitted)"`
+- **先削弱细节，再删除内容；先处理旧消息，再处理最近消息**
+
+### 代码示例
+
+```python
+from jev import JevCompactor
+
+# asker 可替换：真实 Jev / 本地 mock / LLM 适配器
+# 模型可以替换，决策协议要稳定
+compactor = JevCompactor(
+    asker=your_jev_asker,
+    keep_threshold=0.5,
+    preserve_recent=6,
+)
+
+result = compactor.compact(messages)
+
+print(f"压缩前: {result['chars_before']} 字符")
+print(f"压缩后: {result['chars_after']} 字符")
+print(f"压缩率: {result['compression_ratio']:.1%}")
+
+for d in result['decisions']:
+    print(f"{d.call_id} {d.tool_name} → {d.action} "
+          f"(keepCall={d.keep_call:.2f}, keepResult={d.keep_result:.2f})")
+```
+
+跑 Demo：
+
+```bash
+python examples/context_compaction.py
+```
+
+### 概率阈值建议（谨慎使用）
+
+| 概率区间 | 系统动作 | 说明 |
+| --- | --- | --- |
+| ≥ 0.8 | 自动执行 | 适合低风险、高重复场景 |
+| 0.5 ~ 0.8 | 保守处理 | 截断、保留摘要、请求补充信息 |
+| < 0.5 | 删除或回退 | 低价值内容可清理，高风险场景转人工 |
+
+> ⚠️ 概率不是安全证明。上线前先 shadow mode 跑一段时间，用自己的业务样本统计不同概率段的真实正确率，再定阈值。
+
+---
+
 ## 🚀 快速开始
 
 ### 1. 安装
@@ -226,10 +330,12 @@ jev-agent-routing/
 │   ├── __init__.py      # 导出
 │   ├── client.py        # Jev API 客户端（choice/noul/score）
 │   ├── router.py        # 快慢双层路由 + 模型路由
-│   └── agent.py         # 完整 DIY Agent 实现
+│   ├── agent.py         # 完整 DIY Agent 实现
+│   └── compaction.py    # 上下文压缩（fast-jev-compaction 风格）
 ├── examples/
-│   ├── quickstart.py    # 快速开始 Demo
-│   └── wechat_polish_bot.py  # 微信润色助手
+│   ├── quickstart.py         # 快速开始 Demo
+│   ├── wechat_polish_bot.py  # 微信润色助手
+│   └── context_compaction.py # 上下文压缩 Demo
 ├── webapp/
 │   ├── server.py       # FastAPI 后端
 │   └── index.html      # 前端界面
@@ -243,6 +349,9 @@ jev-agent-routing/
 ## 📚 参考
 
 - **Jev 官网**：https://console.typesafe.ai
+- **Jev 官方文档**：https://docs.typesafe.ai
+- **腾讯技术工程：一万字 Jev 工程实践长文**：https://mp.weixin.qq.com/s/D1La4jMoVZ5Ip_RrVY1kPw
+- **fast-jev-compaction**（上下文压缩）：Claude Code 插件 / npm 库
 - **jev-ultrafast**（浏览器 Agent）：https://github.com/browser-use/jev-ultrafast
 - **kev**（0.5B 本地复现）：https://github.com/jaredpalmer/kev
 - **Minecraft Agent**（Jev + GPT 打末影龙）：https://github.com/rmalde/minecraft-agent

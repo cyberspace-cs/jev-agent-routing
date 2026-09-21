@@ -18,7 +18,6 @@ from pydantic import BaseModel
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
-from fastapi.staticfiles import StaticFiles
 
 import requests
 
@@ -186,10 +185,6 @@ def wechat_polish(req: WechatPolishRequest):
 @app.get("/")
 def index():
     return FileResponse("index.html")
-
-
-# 静态文件
-app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
 if __name__ == "__main__":

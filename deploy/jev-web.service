@@ -1,0 +1,25 @@
+# Jev Agent Routing - systemd service
+# 用法：
+#   1. 复制到 /etc/systemd/system/jev-web.service
+#   2. systemctl daemon-reload
+#   3. systemctl enable jev-web
+#   4. systemctl start jev-web
+#   5. systemctl status jev-web
+
+[Unit]
+Description=Jev Agent Routing Web Demo
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/root/jev-agent-routing/webapp
+Environment="JEV_API_KEY=你的KEY"
+ExecStart=/usr/bin/python3 -m uvicorn server:app --host 0.0.0.0 --port 8000
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

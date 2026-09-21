@@ -98,11 +98,11 @@ print(result.level)  # "high"
 
 ```bash
 # 克隆仓库
-git clone https://github.com/yourname/jev-agent-routing.git
+git clone https://github.com/cyberspace-cs/jev-agent-routing.git
 cd jev-agent-routing
 
 # 安装依赖
-pip install requests
+pip install fastapi uvicorn requests
 ```
 
 ### 2. 拿 API Key
@@ -119,7 +119,20 @@ set JEV_API_KEY=sk-xxx
 export JEV_API_KEY=sk-xxx
 ```
 
-### 3. 跑 Demo
+### 3. 跑 Web Demo（推荐新手）
+
+```bash
+cd webapp
+uvicorn server:app --reload --port 8000
+```
+
+打开浏览器访问 http://localhost:8000，你会看到：
+- 🎯 **Choice 选择** — 从选项中选一个，看概率分布
+- 📊 **Score 打分** — 风险等级、评分
+- ⚖️ **Noul 判断** — 是/否判断，返回概率
+- 💬 **微信润色** — 发消息前先检查合不合适
+
+### 4. 跑命令行 Demo
 
 ```bash
 python examples/quickstart.py
@@ -212,9 +225,14 @@ jev-agent-routing/
 ├── jev/
 │   ├── __init__.py      # 导出
 │   ├── client.py        # Jev API 客户端（choice/noul/score）
-│   └── router.py        # 快慢双层路由 + 模型路由
+│   ├── router.py        # 快慢双层路由 + 模型路由
+│   └── agent.py         # 完整 DIY Agent 实现
 ├── examples/
-│   └── quickstart.py    # 快速开始 Demo
+│   ├── quickstart.py    # 快速开始 Demo
+│   └── wechat_polish_bot.py  # 微信润色助手
+├── webapp/
+│   ├── server.py       # FastAPI 后端
+│   └── index.html      # 前端界面
 ├── docs/
 │   └── (后续补充)
 └── README.md

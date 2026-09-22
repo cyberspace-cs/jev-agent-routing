@@ -7,7 +7,7 @@ FastAPI 后端，调用 Jev API，提供三种决策模式：
 - Noul: 是/否判断
 
 运行：
-    pip install fastapi uvicorn requests
+    pip install fastapi uvicorn requests typesafe-sdk
     uvicorn server:app --reload --port 8000
 """
 
@@ -19,8 +19,6 @@ from pydantic import BaseModel
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
-
-import requests
 
 app = FastAPI(title="Jev Demo", version="0.1.0")
 
@@ -34,7 +32,7 @@ app.add_middleware(
 )
 
 # ============ 配置 ============
-JEV_API_KEY = os.getenv("JEV_API_KEY", "")
+TYPESAFE_API_KEY = os.getenv("TYPESAFE_API_KEY", "")
 JEV_BASE_URL = "https://api.typesafe.ai/v1"
 
 
@@ -96,34 +94,61 @@ def mock_jev_multi(questions: dict) -> dict:
 
 
 # ============ API 调用 ============
-def call_jev(state: str, questions: dict) -> dict:
+def call_jev(state, questions: dict) -> dict:
     """调用 Jev API（无 Key 时走 mock）"""
-    if not JEV_API_KEY:
+    if not TYPESAFE_API_KEY:
         # Mock 模式
         return mock_jev_multi(questions)
 
-    headers = {
-        "Authorization": f"Bearer {JEV_API_KEY}",
-        "Content-Type": "application/json",
-    }
-
-    payload = {
-        "model": "jev-latest",
-        "state": state,
-        "questions": questions,
-    }
-
     try:
-        resp = requests.post(
-            f"{JEV_BASE_URL}/systemone",
-            json=payload,
-            headers=headers,
-            timeout=10,
-        )
-        resp.raise_for_status()
-        return resp.json().get("answers", {})
+        from typesafe_sdk import Choice, Noul, Score, TypeSafeClient
+        client = TypeSafeClient()  # 读 TYPESAFE_API_KEY
+
+        # 构造 SDK questions
+        sdk_questions = {}
+        for q_name, q_config in questions.items():
+            q_type = q_config.get("type", "noul")
+            instructions = q_config.get("instructions", "")
+            criteria = q_config.get("criteria", {})
+
+            if q_type == "choice":
+                sdk_questions[q_name] = Choice(instructions=instructions, criteria=criteria)
+            elif q_type == "score":
+                sdk_questions[q_name] = Score(instructions=instructions, criteria=criteria)
+            elif q_type == "noul":
+                sdk_questions[q_name] = Noul(instructions=instructions)
+
+        resp = client.system_one(state=state, questions=sdk_questions)
+
+        # 把 SDK 返回转成 dict
+        results = {}
+        for q_name in questions.keys():
+            ans = resp.answers[q_name]
+            q_type = questions[q_name].get("type", "noul")
+            if q_type == "choice":
+                results[q_name] = {
+                    "type": "choice",
+                    "choice": ans.choice,
+                    "confidence": ans.confidence,
+                    "probabilities": ans.probabilities
+                }
+            elif q_type == "score":
+                results[q_name] = {
+                    "type": "score",
+                    "score": ans.score,
+                    "confidence": ans.confidence,
+                    "probabilities": ans.probabilities
+                }
+            elif q_type == "noul":
+                results[q_name] = {
+                    "type": "noul",
+                    "noul": ans.noul
+                }
+        return results
+
     except Exception as e:
         # API 失败时 fallback 到 mock
+        print(f"Jev API error: {e}")
         return mock_jev_multi(questions)
 
 
@@ -164,10 +189,6 @@ def noul(req: NoulRequest):
         "result": {
             "type": "noul",
             "instructions": req.question,
-            "criteria": {
-                "true": "Yes, it is true",
-                "false": "No, it is not true"
-            }
         }
     }
     answers = call_jev(req.state, questions)
@@ -180,17 +201,20 @@ def noul(req: NoulRequest):
 @app.post("/api/wechat-polish")
 def wechat_polish(req: WechatPolishRequest):
     """微信润色：检查消息合不合适"""
-    state = f"接收人：{req.recipient}\n消息内容：{req.message}"
+    state = {
+        "dialogue": {
+            "me_said": [],
+            "they_said": [req.message],
+            "their_latest": req.message,
+            "relation": f"老板-下属" if "老板" in req.recipient else req.recipient,
+        }
+    }
 
     # 并行问三个问题（Jev 一次调用多个问题）
     questions = {
         "too_rude": {
             "type": "noul",
             "instructions": "这句话语气冲吗？会不会让对方不舒服？",
-            "criteria": {
-                "true": "语气冲，容易让对方不舒服",
-                "false": "语气正常，没问题"
-            }
         },
         "risk_score": {
             "type": "score",

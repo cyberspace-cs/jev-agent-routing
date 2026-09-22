@@ -1,4 +1,4 @@
-"""
+﻿"""
 Jev Web Demo — 后端 API
 =========================
 FastAPI 后端，调用 Jev API，提供三种决策模式：
@@ -12,6 +12,7 @@ FastAPI 后端，调用 Jev API，提供三种决策模式：
 """
 
 import os
+import random
 from typing import List, Optional
 from pydantic import BaseModel
 
@@ -61,9 +62,7 @@ class WechatPolishRequest(BaseModel):
     recipient: str = "朋友"
 
 
-# ============ API 调用 ============
-import random
-
+# ============ Mock 数据 ============
 def mock_jev_multi(questions: dict) -> dict:
     """Mock Jev 响应（无 API Key 时使用），支持多问题"""
     results = {}
@@ -94,6 +93,10 @@ def mock_jev_multi(questions: dict) -> dict:
                 "confidence": random.uniform(0.7, 0.99)
             }
     return results
+
+
+# ============ API 调用 ============
+def call_jev(state: str, questions: dict) -> dict:
     """调用 Jev API（无 Key 时走 mock）"""
     if not JEV_API_KEY:
         # Mock 模式

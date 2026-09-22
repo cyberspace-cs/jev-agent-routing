@@ -5,10 +5,6 @@ FastAPI 后端，调用 Jev API，提供三种决策模式：
 - Choice: 从选项中选一个
 - Score: 打分
 - Noul: 是/否判断
-
-运行：
-    pip install fastapi uvicorn requests typesafe-sdk
-    uvicorn server:app --reload --port 8000
 """
 
 import os
@@ -18,9 +14,13 @@ from pydantic import BaseModel
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 
-app = FastAPI(title="Jev Demo", version="0.1.0")
+class UTF8JSONResponse(JSONResponse):
+    """确保 JSON 响应使用 UTF-8 编码"""
+    media_type = "application/json; charset=utf-8"
+
+app = FastAPI(title="Jev Demo", version="0.1.0", default_response_class=UTF8JSONResponse)
 
 # 允许跨域
 app.add_middleware(
@@ -97,14 +97,12 @@ def mock_jev_multi(questions: dict) -> dict:
 def call_jev(state, questions: dict) -> dict:
     """调用 Jev API（无 Key 时走 mock）"""
     if not TYPESAFE_API_KEY:
-        # Mock 模式
         return mock_jev_multi(questions)
 
     try:
         from typesafe_sdk import Choice, Noul, Score, TypeSafeClient
-        client = TypeSafeClient()  # 读 TYPESAFE_API_KEY
+        client = TypeSafeClient()
 
-        # 构造 SDK questions
         sdk_questions = {}
         for q_name, q_config in questions.items():
             q_type = q_config.get("type", "noul")
@@ -120,7 +118,6 @@ def call_jev(state, questions: dict) -> dict:
 
         resp = client.system_one(state=state, questions=sdk_questions)
 
-        # 把 SDK 返回转成 dict
         results = {}
         for q_name in questions.keys():
             ans = resp.answers[q_name]
@@ -147,7 +144,6 @@ def call_jev(state, questions: dict) -> dict:
         return results
 
     except Exception as e:
-        # API 失败时 fallback 到 mock
         print(f"Jev API error: {e}")
         return mock_jev_multi(questions)
 
@@ -156,7 +152,6 @@ def call_jev(state, questions: dict) -> dict:
 
 @app.post("/api/choice")
 def choice(req: ChoiceRequest):
-    """Choice 模式：从选项中选一个"""
     questions = {
         "result": {
             "type": "choice",
@@ -170,7 +165,6 @@ def choice(req: ChoiceRequest):
 
 @app.post("/api/score")
 def score(req: ScoreRequest):
-    """Score 模式：打分"""
     questions = {
         "result": {
             "type": "score",
@@ -184,7 +178,6 @@ def score(req: ScoreRequest):
 
 @app.post("/api/noul")
 def noul(req: NoulRequest):
-    """Noul 模式：是/否判断"""
     questions = {
         "result": {
             "type": "noul",
@@ -200,17 +193,15 @@ def noul(req: NoulRequest):
 
 @app.post("/api/wechat-polish")
 def wechat_polish(req: WechatPolishRequest):
-    """微信润色：检查消息合不合适"""
     state = {
         "dialogue": {
             "me_said": [],
             "they_said": [req.message],
             "their_latest": req.message,
-            "relation": f"老板-下属" if "老板" in req.recipient else req.recipient,
+            "relation": "老板-下属",
         }
     }
 
-    # 并行问三个问题（Jev 一次调用多个问题）
     questions = {
         "too_rude": {
             "type": "noul",
@@ -248,7 +239,6 @@ def wechat_polish(req: WechatPolishRequest):
         "should_send": "dont_send" not in answers.get("appropriateness", {}).get("choice", "ok"),
     }
 
-    # 根据 score 映射 risk_level
     score_val = results["risk_score"]
     if score_val < 0.5:
         results["risk_level"] = "safe"
@@ -259,7 +249,6 @@ def wechat_polish(req: WechatPolishRequest):
     else:
         results["risk_level"] = "very_risky"
 
-    # 生成建议
     if not results["should_send"]:
         results["feedback"] = f"⚠️ 千万别发！这条给{req.recipient}的消息风险太高了。"
     elif results["too_rude"] > 0.6:

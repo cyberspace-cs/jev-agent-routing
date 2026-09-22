@@ -259,7 +259,7 @@
         // 模拟 Jev 分析
         async function analyzeWithJev(message, recipient = "老板") {
             try {
-                const resp = await fetch('/api/wechat-polish', {
+                const resp = await fetch('/jev/api/wechat-polish', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({
@@ -363,3 +363,4 @@
     </script>
 </body>
 </html>
+

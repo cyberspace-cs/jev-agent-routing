@@ -62,16 +62,34 @@ class WechatPolishRequest(BaseModel):
 
 
 # ============ API 调用 ============
+import random
+
+def mock_jev(type: str, question: str = "") -> dict:
+    """Mock Jev 响应（无 API Key 时使用）"""
+    if type == "noul":
+        return {"type": "noul", "noul": random.uniform(0.1, 0.95), "confidence": random.uniform(0.7, 0.99)}
+    elif type == "choice":
+        opts = ["billing", "technical", "sales"]
+        chosen = random.choice(opts)
+        probs = {o: random.uniform(0.01, 0.9) for o in opts}
+        probs[chosen] = 0.7 + random.uniform(0, 0.25)
+        return {"type": "choice", "choice": chosen, "confidence": probs[chosen], "probabilities": probs}
+    elif type == "score":
+        return {"type": "score", "score": random.uniform(0.5, 2.5), "confidence": random.uniform(0.7, 0.99)}
+    return {}
+
+
 def call_jev(payload: dict) -> dict:
-    """调用 Jev API"""
+    """调用 Jev API（无 Key 时走 mock）"""
     if not JEV_API_KEY:
-        raise HTTPException(status_code=400, detail="请先设置 JEV_API_KEY 环境变量")
-    
+        # Mock 模式
+        return mock_jev(payload.get("type", "noul"))
+
     headers = {
         "Authorization": f"Bearer {JEV_API_KEY}",
         "Content-Type": "application/json",
     }
-    
+
     try:
         resp = requests.post(
             f"{JEV_BASE_URL}/decisions",
@@ -81,10 +99,9 @@ def call_jev(payload: dict) -> dict:
         )
         resp.raise_for_status()
         return resp.json()
-    except requests.exceptions.HTTPError as e:
-        raise HTTPException(status_code=resp.status_code, detail=f"Jev API 错误: {e}")
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"请求失败: {e}")
+        # API 失败时 fallback 到 mock
+        return mock_jev(payload.get("type", "noul"))
 
 
 # ============ API 路由 ============

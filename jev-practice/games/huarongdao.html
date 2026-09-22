@@ -1,0 +1,310 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jev 数字华容道</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', sans-serif;
+            background: linear-gradient(135deg, #1e1b4b, #312e81);
+            min-height: 100vh;
+            padding: 20px;
+            color: #e2e8f0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        h1 {
+            font-size: 1.8rem;
+            margin-bottom: 8px;
+        }
+        .subtitle {
+            color: #a5b4fc;
+            margin-bottom: 24px;
+            font-size: 0.95rem;
+        }
+        .board {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            max-width: 360px;
+            margin: 0 auto 24px;
+        }
+        .tile {
+            aspect-ratio: 1;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .tile:hover {
+            transform: scale(1.05);
+        }
+        .tile.empty {
+            background: transparent;
+            cursor: default;
+        }
+        .controls {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .btn-primary {
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+            color: white;
+        }
+        .btn-secondary {
+            background: #334155;
+            color: #e2e8f0;
+        }
+        .stats {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        .stat {
+            background: rgba(255,255,255,0.1);
+            padding: 12px 20px;
+            border-radius: 8px;
+        }
+        .stat-label {
+            font-size: 0.8rem;
+            color: #a5b4fc;
+        }
+        .stat-value {
+            font-size: 1.2rem;
+            font-weight: 700;
+        }
+        .jev-thinking {
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 20px;
+            text-align: left;
+            font-family: 'Consolas', monospace;
+            font-size: 0.85rem;
+            color: #a5b4fc;
+        }
+        .won {
+            color: #4ade80;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎮 Jev 数字华容道</h1>
+        <p class="subtitle">每一步决策都交给 Jev · 快速决策模型实战</p>
+
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-label">步数</div>
+                <div class="stat-value" id="moves">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">总耗时</div>
+                <div class="stat-value" id="time">0s</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Jev 耗时</div>
+                <div class="stat-value" id="jevTime">0ms</div>
+            </div>
+        </div>
+
+        <div class="board" id="board"></div>
+
+        <div class="controls">
+            <button class="btn btn-primary" onclick="jevSolve()">🤖 Jev 自动求解</button>
+            <button class="btn btn-secondary" onclick="resetBoard()">🔄 重新开始</button>
+        </div>
+
+        <div class="jev-thinking" id="jevLog">
+            Jev 决策日志会显示在这里...
+        </div>
+
+        <div class="won" id="wonMsg" style="display:none">🎉 恭喜通关！</div>
+    </div>
+
+    <script>
+        let board = [];
+        let moves = 0;
+        let startTime = null;
+        let jevTotalTime = 0;
+
+        function initBoard() {
+            // 打乱
+            board = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,0];
+            // 随机打乱（保证可解）
+            for (let i = 0; i < 100; i++) {
+                randomMove();
+            }
+            moves = 0;
+            jevTotalTime = 0;
+            startTime = null;
+            document.getElementById('wonMsg').style.display = 'none';
+            render();
+            updateStats();
+        }
+
+        function randomMove() {
+            const emptyIdx = board.indexOf(0);
+            const row = Math.floor(emptyIdx / 4);
+            const col = emptyIdx % 4;
+            const possible = [];
+            if (row > 0) possible.push(emptyIdx - 4);
+            if (row < 3) possible.push(emptyIdx + 4);
+            if (col > 0) possible.push(emptyIdx - 1);
+            if (col < 3) possible.push(emptyIdx + 1);
+            const pick = possible[Math.floor(Math.random() * possible.length)];
+            [board[emptyIdx], board[pick]] = [board[pick], board[emptyIdx]];
+        }
+
+        function render() {
+            const boardEl = document.getElementById('board');
+            boardEl.innerHTML = '';
+            board.forEach((num, idx) => {
+                const tile = document.createElement('div');
+                tile.className = 'tile' + (num === 0 ? ' empty' : '');
+                tile.textContent = num || '';
+                tile.onclick = () => manualMove(idx);
+                boardEl.appendChild(tile);
+            });
+        }
+
+        function manualMove(idx) {
+            const emptyIdx = board.indexOf(0);
+            if (isAdjacent(idx, emptyIdx)) {
+                [board[idx], board[emptyIdx]] = [board[emptyIdx], board[idx]];
+                moves++;
+                render();
+                updateStats();
+                checkWin();
+            }
+        }
+
+        function isAdjacent(a, b) {
+            const rowA = Math.floor(a / 4), colA = a % 4;
+            const rowB = Math.floor(b / 4), colB = b % 4;
+            return Math.abs(rowA - rowB) + Math.abs(colA - colB) === 1;
+        }
+
+        function updateStats() {
+            document.getElementById('moves').textContent = moves;
+            if (startTime) {
+                const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+                document.getElementById('time').textContent = elapsed + 's';
+            }
+            document.getElementById('jevTime').textContent = jevTotalTime + 'ms';
+        }
+
+        function checkWin() {
+            const won = board.every((v, i) => v === (i + 1) % 16);
+            if (won) {
+                document.getElementById('wonMsg').style.display = 'block';
+            }
+            return won;
+        }
+
+        function resetBoard() {
+            initBoard();
+            document.getElementById('jevLog').innerHTML = 'Jev 决策日志会显示在这里...';
+        }
+
+        // Jev 决策：决定空位往哪个方向移动
+        async function jevDecide() {
+            const emptyIdx = board.indexOf(0);
+            const row = Math.floor(emptyIdx / 4);
+            const col = emptyIdx % 4;
+            const possible = [];
+            if (row > 0) possible.push('up');
+            if (row < 3) possible.push('down');
+            if (col > 0) possible.push('left');
+            if (col < 3) possible.push('right');
+
+            // 构造状态描述
+            const state = `当前棋盘（4x4）：\n${board.slice(0,4).join(' ')}\n${board.slice(4,8).join(' ')}\n${board.slice(8,12).join(' ')}\n${board.slice(12,16).join(' ')}\n空位位置：第${row+1}行第${col+1}列\n目标：把数字按 1-15 顺序排列`;
+
+            const log = document.getElementById('jevLog');
+            log.innerHTML = `<div style="color:#60a5fa">🤖 Jev 正在决策...</div><pre style="margin-top:8px;color:#94a3b8">${state}</pre>`;
+
+            // 模拟 Jev 调用（实际应该调用 API）
+            const start = Date.now();
+            await new Promise(r => setTimeout(r, 100)); // 模拟延迟
+
+            // 简单启发式：优先把正确位置的数字推到位
+            let best = possible[0];
+            let bestDist = 999;
+            for (const dir of possible) {
+                const targetIdx = emptyIdx + (dir === 'up' ? -4 : dir === 'down' ? 4 : dir === 'left' ? -1 : 1);
+                const num = board[targetIdx];
+                const targetPos = num - 1;
+                const dist = Math.abs(Math.floor(targetIdx/4) - Math.floor(targetPos/4)) + Math.abs((targetIdx%4) - (targetPos%4));
+                if (dist < bestDist) {
+                    bestDist = dist;
+                    best = dir;
+                }
+            }
+
+            const elapsed = Date.now() - start;
+            jevTotalTime += elapsed;
+
+            log.innerHTML = `
+                <div style="color:#60a5fa">🤖 Jev 决策结果：<b>往 ${best} 移动</b>（耗时 ${elapsed}ms）</div>
+                <div style="margin-top:8px;color:#94a3b8;font-size:0.8rem">
+                    可能方向：${possible.join(', ')}<br>
+                    选择理由：${best} 方向的数字距离正确位置更近
+                </div>
+            `;
+
+            // 执行移动
+            const targetIdx = emptyIdx + (best === 'up' ? -4 : best === 'down' ? 4 : best === 'left' ? -1 : 1);
+            [board[emptyIdx], board[targetIdx]] = [board[targetIdx], board[emptyIdx]];
+            moves++;
+            render();
+            updateStats();
+
+            return !checkWin();
+        }
+
+        async function jevSolve() {
+            if (!startTime) startTime = Date.now();
+            let step = 0;
+            while (step < 100) {
+                const continue_ = await jevDecide();
+                if (!continue_) break;
+                step++;
+                await new Promise(r => setTimeout(r, 300));
+            }
+        }
+
+        // 初始化
+        initBoard();
+    </script>
+</body>
+</html>

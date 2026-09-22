@@ -1,0 +1,283 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jev 批量邮件分类</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', sans-serif;
+            background: #0f172a;
+            min-height: 100vh;
+            padding: 20px;
+            color: #e2e8f0;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+            font-size: 1.8rem;
+            margin-bottom: 8px;
+            background: linear-gradient(90deg, #34d399, #60a5fa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .subtitle {
+            text-align: center;
+            color: #94a3b8;
+            margin-bottom: 24px;
+        }
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .stat-card {
+            background: #1e293b;
+            padding: 16px;
+            border-radius: 10px;
+            text-align: center;
+            border: 1px solid #334155;
+        }
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #34d399;
+        }
+        .stat-label {
+            font-size: 0.8rem;
+            color: #94a3b8;
+            margin-top: 4px;
+        }
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(90deg, #34d399, #3b82f6);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .email-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .email-card {
+            background: #1e293b;
+            padding: 16px;
+            border-radius: 10px;
+            border: 1px solid #334155;
+        }
+        .email-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+        .email-from {
+            font-weight: 600;
+            color: #e2e8f0;
+        }
+        .email-time {
+            color: #64748b;
+            font-size: 0.85rem;
+        }
+        .email-subject {
+            font-size: 0.95rem;
+            margin-bottom: 8px;
+            color: #e2e8f0;
+        }
+        .email-body {
+            font-size: 0.85rem;
+            color: #94a3b8;
+            margin-bottom: 12px;
+        }
+        .tags {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .tag {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .tag-urgent { background: #fecaca; color: #991b1b; }
+        .tag-normal { background: #fef3c7; color: #92400e; }
+        .tag-low { background: #dcfce7; color: #166534; }
+        .tag-billing { background: #dbeafe; color: #1e40af; }
+        .tag-technical { background: #e9d5ff; color: #6b21a8; }
+        .tag-sales { background: #fce7f3; color: #9d174d; }
+        .tag-pending {
+            background: #334155;
+            color: #94a3b8;
+        }
+        .progress {
+            margin-bottom: 20px;
+            background: #1e293b;
+            border-radius: 10px;
+            overflow: hidden;
+            height: 8px;
+        }
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #34d399, #3b82f6);
+            transition: width 0.3s;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📧 Jev 批量邮件分类</h1>
+        <p class="subtitle">1000 封邮件批量分类 · 对比 DeepSeek 的速度和成本</p>
+
+        <div class="stats-bar">
+            <div class="stat-card">
+                <div class="stat-value" id="statTotal">0</div>
+                <div class="stat-label">总邮件数</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="statDone">0</div>
+                <div class="stat-label">已分类</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="statTime">0s</div>
+                <div class="stat-label">耗时</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="statCost">$0.00</div>
+                <div class="stat-label">总成本</div>
+            </div>
+        </div>
+
+        <div class="progress">
+            <div class="progress-bar" id="progressBar" style="width:0%"></div>
+        </div>
+
+        <button class="btn" id="runBtn" onclick="startBatch()">🚀 开始批量分类</button>
+
+        <div class="email-list" id="emailList"></div>
+    </div>
+
+    <script>
+        // 模拟 20 封邮件（实际 1000 封）
+        const emails = [
+            { from: "客户A", subject: "重复扣款问题", body: "我上周被重复扣了两次款，订单号 A-104，请帮我退款。" },
+            { from: "客户B", subject: "系统报错", body: "页面一直报 500 错误，打不开，很急！" },
+            { from: "客户C", subject: "价格咨询", body: "请问企业版多少钱一年？我们有 50 人团队。" },
+            { from: "客户D", subject: "功能建议", body: "希望能加一个导出 CSV 的功能，谢谢！" },
+            { from: "客户E", subject: "账户被盗", body: "我的账户被别人登录了，里面的资料都没了！快处理！" },
+            { from: "客户F", subject: "发票问题", body: "上个月的发票开错了抬头，能重开吗？" },
+            { from: "客户G", subject: "集成问题", body: "你们的 API 文档看不太懂，能给个示例吗？" },
+            { from: "客户H", subject: "合同咨询", body: "我们想签年付合同，怎么走流程？" },
+            { from: "客户I", subject: "系统很慢", body: "最近系统越来越慢了，每次打开要等 10 秒。" },
+            { from: "客户J", subject: "退款申请", body: "试用了一周，觉得不适合我们，申请退款。" },
+        ];
+
+        let doneCount = 0;
+        let startTime = null;
+
+        function renderEmails() {
+            const list = document.getElementById('emailList');
+            list.innerHTML = emails.map((e, i) => `
+                <div class="email-card" id="email-${i}">
+                    <div class="email-header">
+                        <span class="email-from">${e.from}</span>
+                        <span class="email-time">刚刚</span>
+                    </div>
+                    <div class="email-subject">${e.subject}</div>
+                    <div class="email-body">${e.body}</div>
+                    <div class="tags">
+                        <span class="tag tag-pending" id="tag-priority-${i}">等待分类</span>
+                        <span class="tag tag-pending" id="tag-dept-${i}">等待分类</span>
+                    </div>
+                </div>
+            `).join('');
+            document.getElementById('statTotal').textContent = emails.length;
+        }
+
+        // 模拟 Jev 分类
+        function classifyEmail(email) {
+            const text = email.body.toLowerCase();
+
+            // 优先级
+            let priority = 'normal';
+            if (text.includes('急') || text.includes('快') || text.includes('重复') || text.includes('被盗')) {
+                priority = 'urgent';
+            } else if (text.includes('谢谢') || text.includes('建议')) {
+                priority = 'low';
+            }
+
+            // 部门
+            let dept = 'technical';
+            if (text.includes('款') || text.includes('发票') || text.includes('退款')) {
+                dept = 'billing';
+            } else if (text.includes('价格') || text.includes('合同') || text.includes('年付')) {
+                dept = 'sales';
+            }
+
+            return { priority, dept };
+        }
+
+        async function startBatch() {
+            document.getElementById('runBtn').disabled = true;
+            document.getElementById('runBtn').textContent = '⏳ 分类中...';
+            startTime = Date.now();
+            doneCount = 0;
+
+            for (let i = 0; i < emails.length; i++) {
+                const result = classifyEmail(emails[i]);
+
+                // 更新标签
+                const priorityTag = document.getElementById(`tag-priority-${i}`);
+                priorityTag.className = `tag tag-${result.priority}`;
+                priorityTag.textContent = result.priority === 'urgent' ? '🔴 紧急' : result.priority === 'normal' ? '🟡 普通' : '🟢 低';
+
+                const deptTag = document.getElementById(`tag-dept-${i}`);
+                deptTag.className = `tag tag-${result.dept}`;
+                deptTag.textContent = result.dept === 'billing' ? '💰 财务' : result.dept === 'sales' ? '🤝 销售' : '🔧 技术';
+
+                doneCount++;
+                updateStats();
+
+                await new Promise(r => setTimeout(r, 150)); // 模拟 Jev 调用
+            }
+
+            const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+            document.getElementById('runBtn').textContent = `✅ 完成！耗时 ${elapsed}s`;
+        }
+
+        function updateStats() {
+            document.getElementById('statDone').textContent = doneCount;
+            const pct = (doneCount / emails.length * 100).toFixed(0);
+            document.getElementById('progressBar').style.width = pct + '%';
+            if (startTime) {
+                const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+                document.getElementById('statTime').textContent = elapsed + 's';
+            }
+            // 模拟成本：每封 0.0000177 刀
+            const cost = (doneCount * 0.0000177).toFixed(4);
+            document.getElementById('statCost').textContent = '$' + cost;
+        }
+
+        renderEmails();
+    </script>
+</body>
+</html>

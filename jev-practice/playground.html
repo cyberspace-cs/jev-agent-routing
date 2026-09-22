@@ -1,0 +1,396 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jev 调试广场 - 中文版</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Helvetica Neue', sans-serif;
+            background: #0f172a;
+            min-height: 100vh;
+            padding: 20px;
+            color: #e2e8f0;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            font-size: 2rem;
+            background: linear-gradient(90deg, #60a5fa, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+        .header p {
+            color: #94a3b8;
+            font-size: 0.95rem;
+        }
+        .main {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        @media (max-width: 768px) {
+            .main {
+                grid-template-columns: 1fr;
+            }
+        }
+        .panel {
+            background: #1e293b;
+            border-radius: 12px;
+            padding: 24px;
+            border: 1px solid #334155;
+        }
+        .panel h2 {
+            font-size: 1.1rem;
+            margin-bottom: 16px;
+            color: #e2e8f0;
+        }
+        .form-group {
+            margin-bottom: 16px;
+        }
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 0.85rem;
+            color: #94a3b8;
+            font-weight: 500;
+        }
+        textarea, input, select {
+            width: 100%;
+            padding: 10px 12px;
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            color: #e2e8f0;
+            font-size: 0.9rem;
+            font-family: inherit;
+        }
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        .type-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        .type-tab {
+            flex: 1;
+            padding: 10px;
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            color: #94a3b8;
+            cursor: pointer;
+            text-align: center;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        .type-tab.active {
+            background: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+        .btn-run {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .btn-run:hover {
+            opacity: 0.9;
+        }
+        .result {
+            background: #0f172a;
+            border-radius: 8px;
+            padding: 20px;
+            min-height: 300px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.85rem;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            color: #a5b4fc;
+        }
+        .placeholder {
+            color: #475569;
+            font-style: italic;
+        }
+        .examples {
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid #334155;
+        }
+        .examples h3 {
+            font-size: 0.9rem;
+            color: #94a3b8;
+            margin-bottom: 10px;
+        }
+        .example-btn {
+            display: block;
+            width: 100%;
+            text-align: left;
+            padding: 8px 12px;
+            background: transparent;
+            border: 1px solid #334155;
+            border-radius: 6px;
+            color: #94a3b8;
+            cursor: pointer;
+            margin-bottom: 6px;
+            font-size: 0.85rem;
+        }
+        .example-btn:hover {
+            background: #334155;
+            color: #e2e8f0;
+        }
+        .prob-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+        .prob-label {
+            width: 100px;
+            font-size: 0.85rem;
+            color: #e2e8f0;
+        }
+        .prob-track {
+            flex: 1;
+            height: 20px;
+            background: #334155;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .prob-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+            border-radius: 10px;
+        }
+        .prob-value {
+            width: 50px;
+            text-align: right;
+            font-size: 0.85rem;
+            color: #e2e8f0;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⚡ Jev 调试广场</h1>
+            <p>中文版在线体验 · 三种 AI 原语：Noul 判断题 / Choice 选择题 / Score 打分题</p>
+        </div>
+
+        <div class="main">
+            <!-- 左侧输入 -->
+            <div class="panel">
+                <h2>📝 输入</h2>
+
+                <div class="type-tabs">
+                    <div class="type-tab active" data-type="noul">Noul 判断题</div>
+                    <div class="type-tab" data-type="choice">Choice 选择题</div>
+                    <div class="type-tab" data-type="score">Score 打分题</div>
+                </div>
+
+                <div class="form-group">
+                    <label>上下文（State）</label>
+                    <textarea id="stateInput" placeholder="输入你想让 Jev 分析的上下文...">我连续 3 天无法连接 Stripe 账户，正在丢失销售额，请尽快处理！</textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>问题（Question / Instructions）</label>
+                    <textarea id="questionInput" placeholder="输入你想问的问题...">这条消息是否传达了紧急性或时效性？</textarea>
+                </div>
+
+                <!-- Choice 选项 -->
+                <div class="form-group" id="optionsGroup" style="display:none">
+                    <label>选项（Criteria）</label>
+                    <textarea id="optionsInput" placeholder="每行一个选项">付款、发票、退款相关
+Bug、系统故障、集成问题
+定价、账户咨询</textarea>
+                </div>
+
+                <button class="btn-run" onclick="runJev()">🚀 运行</button>
+
+                <div class="examples">
+                    <h3>💡 示例</h3>
+                    <button class="example-btn" onclick="loadExample('urgent')">判断邮件是否紧急（Noul）</button>
+                    <button class="example-btn" onclick="loadExample('department')">工单分部门（Choice）</button>
+                    <button class="example-btn" onclick="loadExample('frustration')">客户沮丧程度（Score）</button>
+                </div>
+            </div>
+
+            <!-- 右侧结果 -->
+            <div class="panel">
+                <h2>📊 结果</h2>
+                <div class="result" id="resultPanel">
+                    <span class="placeholder">点击"运行"查看 Jev 返回的结构化决策结果...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentType = 'noul';
+
+        // 类型切换
+        document.querySelectorAll('.type-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.type-tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                currentType = tab.dataset.type;
+                document.getElementById('optionsGroup').style.display =
+                    currentType === 'choice' || currentType === 'score' ? 'block' : 'none';
+            });
+        });
+
+        // 加载示例
+        function loadExample(type) {
+            if (type === 'urgent') {
+                document.querySelector('[data-type="noul"]').click();
+                document.getElementById('stateInput').value = '我连续 3 天无法连接 Stripe 账户，正在丢失销售额，请尽快处理！';
+                document.getElementById('questionInput').value = '这条消息是否传达了紧急性或时效性？';
+            } else if (type === 'department') {
+                document.querySelector('[data-type="choice"]').click();
+                document.getElementById('stateInput').value = '用户说：我上周被重复扣了两次款，订单号 A-104，请帮我退款。';
+                document.getElementById('questionInput').value = '这个工单应该分配给哪个团队处理？';
+                document.getElementById('optionsInput').value = '付款、发票、退款相关\nBug、系统故障、集成问题\n定价、账户咨询';
+            } else if (type === 'frustration') {
+                document.querySelector('[data-type="score"]').click();
+                document.getElementById('stateInput').value = '用户说：我已经等了两个小时了，你们到底能不能处理？我再也不会用你们的产品了！';
+                document.getElementById('questionInput').value = '客户看起来有多沮丧？';
+                document.getElementById('optionsInput').value = '冷静，只是在陈述事实\n不满但还算礼貌\n非常愤怒，言辞激烈';
+            }
+        }
+
+        // 运行 Jev
+        async function runJev() {
+            const state = document.getElementById('stateInput').value;
+            const question = document.getElementById('questionInput').value;
+            const resultPanel = document.getElementById('resultPanel');
+
+            resultPanel.innerHTML = '<span class="placeholder">⏳ Jev 正在思考...</span>';
+
+            try {
+                // 调用后端 API
+                const resp = await fetch('/api/jev-debug', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        type: currentType,
+                        state: state,
+                        question: question,
+                        options: currentType === 'choice' || currentType === 'score'
+                            ? document.getElementById('optionsInput').value.split('\n').filter(l => l.trim())
+                            : []
+                    })
+                });
+                const result = await resp.json();
+                renderResult(result);
+            } catch (e) {
+                // 本地 mock
+                renderResult(mockResult(currentType, question));
+            }
+        }
+
+        // 本地 mock（离线演示）
+        function mockResult(type, question) {
+            if (type === 'noul') {
+                return {
+                    type: 'noul',
+                    noul: 0.95,
+                    confidence: 0.97
+                };
+            } else if (type === 'choice') {
+                return {
+                    type: 'choice',
+                    choice: 'billing',
+                    confidence: 0.87,
+                    probabilities: {
+                        'billing': 0.87,
+                        'technical': 0.10,
+                        'sales': 0.03
+                    }
+                };
+            } else {
+                return {
+                    type: 'score',
+                    score: 1.04,
+                    confidence: 0.94,
+                    probabilities: {'0': 0.04, '1': 0.92, '2': 0.04}
+                };
+            }
+        }
+
+        // 渲染结果
+        function renderResult(result) {
+            const resultPanel = document.getElementById('resultPanel');
+
+            if (result.type === 'noul') {
+                const pct = (result.noul * 100).toFixed(1);
+                resultPanel.innerHTML = `
+                    <div style="margin-bottom: 20px;">
+                        <div style="font-size: 1.2rem; font-weight: 600; margin-bottom: 10px;">Noul 判断题结果</div>
+                        <div style="font-size: 2rem; font-weight: 700; color: #60a5fa;">${pct}%</div>
+                        <div style="font-size: 0.9rem; color: #94a3b8; margin-top: 4px;">置信度：${(result.confidence * 100).toFixed(1)}%</div>
+                    </div>
+                    <div style="font-size: 0.8rem; color: #475569; margin-top: 20px;">
+                        原始 JSON：<br>${JSON.stringify(result, null, 2)}
+                    </div>
+                `;
+            } else if (result.type === 'choice') {
+                let bars = '';
+                for (const [opt, prob] of Object.entries(result.probabilities || {})) {
+                    bars += `
+                        <div class="prob-bar">
+                            <div class="prob-label">${opt}</div>
+                            <div class="prob-track"><div class="prob-fill" style="width: ${prob * 100}%"></div></div>
+                            <div class="prob-value">${(prob * 100).toFixed(1)}%</div>
+                        </div>
+                    `;
+                }
+                resultPanel.innerHTML = `
+                    <div style="margin-bottom: 20px;">
+                        <div style="font-size: 1.2rem; font-weight: 600; margin-bottom: 10px;">Choice 选择题结果</div>
+                        <div style="font-size: 1.5rem; font-weight: 700; color: #60a5fa;">→ ${result.choice}</div>
+                        <div style="font-size: 0.9rem; color: #94a3b8; margin-top: 4px;">置信度：${(result.confidence * 100).toFixed(1)}%</div>
+                    </div>
+                    <div style="margin-bottom: 10px; font-size: 0.9rem; font-weight: 500;">概率分布：</div>
+                    ${bars}
+                    <div style="font-size: 0.8rem; color: #475569; margin-top: 20px;">
+                        原始 JSON：<br>${JSON.stringify(result, null, 2)}
+                    </div>
+                `;
+            } else if (result.type === 'score') {
+                resultPanel.innerHTML = `
+                    <div style="margin-bottom: 20px;">
+                        <div style="font-size: 1.2rem; font-weight: 600; margin-bottom: 10px;">Score 打分题结果</div>
+                        <div style="font-size: 2rem; font-weight: 700; color: #60a5fa;">${result.score.toFixed(2)}</div>
+                        <div style="font-size: 0.9rem; color: #94a3b8; margin-top: 4px;">置信度：${(result.confidence * 100).toFixed(1)}%</div>
+                    </div>
+                    <div style="font-size: 0.8rem; color: #475569; margin-top: 20px;">
+                        原始 JSON：<br>${JSON.stringify(result, null, 2)}
+                    </div>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>

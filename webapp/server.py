@@ -64,44 +64,64 @@ class WechatPolishRequest(BaseModel):
 # ============ API 调用 ============
 import random
 
-def mock_jev(type: str, question: str = "") -> dict:
-    """Mock Jev 响应（无 API Key 时使用）"""
-    if type == "noul":
-        return {"type": "noul", "noul": random.uniform(0.1, 0.95), "confidence": random.uniform(0.7, 0.99)}
-    elif type == "choice":
-        opts = ["billing", "technical", "sales"]
-        chosen = random.choice(opts)
-        probs = {o: random.uniform(0.01, 0.9) for o in opts}
-        probs[chosen] = 0.7 + random.uniform(0, 0.25)
-        return {"type": "choice", "choice": chosen, "confidence": probs[chosen], "probabilities": probs}
-    elif type == "score":
-        return {"type": "score", "score": random.uniform(0.5, 2.5), "confidence": random.uniform(0.7, 0.99)}
-    return {}
-
-
-def call_jev(payload: dict) -> dict:
+def mock_jev_multi(questions: dict) -> dict:
+    """Mock Jev 响应（无 API Key 时使用），支持多问题"""
+    results = {}
+    for q_name, q_config in questions.items():
+        q_type = q_config.get("type", "noul")
+        if q_type == "noul":
+            results[q_name] = {
+                "type": "noul",
+                "noul": random.uniform(0.1, 0.95),
+                "confidence": random.uniform(0.7, 0.99)
+            }
+        elif q_type == "choice":
+            criteria = q_config.get("criteria", {})
+            opts = list(criteria.keys()) if criteria else ["option1", "option2"]
+            chosen = random.choice(opts)
+            probs = {o: random.uniform(0.01, 0.9) for o in opts}
+            probs[chosen] = 0.7 + random.uniform(0, 0.25)
+            results[q_name] = {
+                "type": "choice",
+                "choice": chosen,
+                "confidence": probs[chosen],
+                "probabilities": probs
+            }
+        elif q_type == "score":
+            results[q_name] = {
+                "type": "score",
+                "score": random.uniform(0.5, 2.5),
+                "confidence": random.uniform(0.7, 0.99)
+            }
+    return results
     """调用 Jev API（无 Key 时走 mock）"""
     if not JEV_API_KEY:
         # Mock 模式
-        return mock_jev(payload.get("type", "noul"))
+        return mock_jev_multi(questions)
 
     headers = {
         "Authorization": f"Bearer {JEV_API_KEY}",
         "Content-Type": "application/json",
     }
 
+    payload = {
+        "model": "jev-latest",
+        "state": state,
+        "questions": questions,
+    }
+
     try:
         resp = requests.post(
-            f"{JEV_BASE_URL}/decisions",
+            f"{JEV_BASE_URL}/systemone",
             json=payload,
             headers=headers,
             timeout=10,
         )
         resp.raise_for_status()
-        return resp.json()
+        return resp.json().get("answers", {})
     except Exception as e:
         # API 失败时 fallback 到 mock
-        return mock_jev(payload.get("type", "noul"))
+        return mock_jev_multi(questions)
 
 
 # ============ API 路由 ============
@@ -109,36 +129,46 @@ def call_jev(payload: dict) -> dict:
 @app.post("/api/choice")
 def choice(req: ChoiceRequest):
     """Choice 模式：从选项中选一个"""
-    payload = {
-        "type": "choice",
-        "state": req.state,
-        "question": req.question,
-        "options": req.options,
+    questions = {
+        "result": {
+            "type": "choice",
+            "instructions": req.question,
+            "criteria": {opt: opt for opt in req.options}
+        }
     }
-    return call_jev(payload)
+    answers = call_jev(req.state, questions)
+    return answers.get("result", {})
 
 
 @app.post("/api/score")
 def score(req: ScoreRequest):
     """Score 模式：打分"""
-    payload = {
-        "type": "score",
-        "state": req.state,
-        "question": req.question,
-        "scale": req.scale,
+    questions = {
+        "result": {
+            "type": "score",
+            "instructions": req.question,
+            "criteria": req.scale
+        }
     }
-    return call_jev(payload)
+    answers = call_jev(req.state, questions)
+    return answers.get("result", {})
 
 
 @app.post("/api/noul")
 def noul(req: NoulRequest):
     """Noul 模式：是/否判断"""
-    payload = {
-        "type": "noul",
-        "state": req.state,
-        "question": req.question,
+    questions = {
+        "result": {
+            "type": "noul",
+            "instructions": req.question,
+            "criteria": {
+                "true": "Yes, it is true",
+                "false": "No, it is not true"
+            }
+        }
     }
-    result = call_jev(payload)
+    answers = call_jev(req.state, questions)
+    result = answers.get("result", {})
     result["passed"] = result.get("noul", 0) >= req.threshold
     result["threshold"] = req.threshold
     return result
@@ -148,43 +178,60 @@ def noul(req: NoulRequest):
 def wechat_polish(req: WechatPolishRequest):
     """微信润色：检查消息合不合适"""
     state = f"接收人：{req.recipient}\n消息内容：{req.message}"
-    
-    # 并行问三个问题
-    results = {}
-    
-    # 1. 语气冲不冲
-    r1 = call_jev({
-        "type": "noul",
-        "state": state,
-        "question": "这句话语气冲吗？会不会让对方不舒服？",
-    })
-    results["too_rude"] = r1.get("noul", 0)
-    
-    # 2. 风险等级
-    r2 = call_jev({
-        "type": "score",
-        "state": state,
-        "question": "这条消息发出去的社死风险等级？",
-        "scale": ["safe", "slightly_risky", "risky", "very_risky"],
-    })
-    results["risk_level"] = r2.get("level", "safe")
-    results["risk_score"] = r2.get("score", 0)
-    
-    # 3. 合适程度
-    r3 = call_jev({
-        "type": "choice",
-        "state": state,
-        "question": "这条消息在这个场景下合适吗？",
-        "options": [
-            "perfect: 非常合适，直接发",
-            "ok: 还行，可以发",
-            "needs_polish: 需要润色一下",
-            "dont_send: 千万别发",
-        ],
-    })
-    results["appropriateness"] = r3.get("choice", "ok")
-    results["should_send"] = "dont_send" not in results["appropriateness"]
-    
+
+    # 并行问三个问题（Jev 一次调用多个问题）
+    questions = {
+        "too_rude": {
+            "type": "noul",
+            "instructions": "这句话语气冲吗？会不会让对方不舒服？",
+            "criteria": {
+                "true": "语气冲，容易让对方不舒服",
+                "false": "语气正常，没问题"
+            }
+        },
+        "risk_score": {
+            "type": "score",
+            "instructions": "这条消息发出去的社死风险等级？",
+            "criteria": [
+                "safe: 完全安全",
+                "slightly_risky: 有点风险",
+                "risky: 风险较高",
+                "very_risky: 千万别发"
+            ]
+        },
+        "appropriateness": {
+            "type": "choice",
+            "instructions": "这条消息在这个场景下合适吗？",
+            "criteria": {
+                "perfect": "非常合适，直接发",
+                "ok": "还行，可以发",
+                "needs_polish": "需要润色一下",
+                "dont_send": "千万别发"
+            }
+        }
+    }
+
+    answers = call_jev(state, questions)
+
+    results = {
+        "too_rude": answers.get("too_rude", {}).get("noul", 0),
+        "risk_level": "safe",
+        "risk_score": answers.get("risk_score", {}).get("score", 0),
+        "appropriateness": answers.get("appropriateness", {}).get("choice", "ok"),
+        "should_send": "dont_send" not in answers.get("appropriateness", {}).get("choice", "ok"),
+    }
+
+    # 根据 score 映射 risk_level
+    score_val = results["risk_score"]
+    if score_val < 0.5:
+        results["risk_level"] = "safe"
+    elif score_val < 1.5:
+        results["risk_level"] = "slightly_risky"
+    elif score_val < 2.5:
+        results["risk_level"] = "risky"
+    else:
+        results["risk_level"] = "very_risky"
+
     # 生成建议
     if not results["should_send"]:
         results["feedback"] = f"⚠️ 千万别发！这条给{req.recipient}的消息风险太高了。"
@@ -194,7 +241,7 @@ def wechat_polish(req: WechatPolishRequest):
         results["feedback"] = f"✨ 意思没问题，但可以润色得更得体一点。"
     else:
         results["feedback"] = f"✅ 没问题，直接发吧！"
-    
+
     return results
 
 

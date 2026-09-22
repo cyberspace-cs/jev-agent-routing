@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jev Demo — 快速决策模型</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>微信 - Jev 低情商救星</title>
     <style>
         * {
             margin: 0;
@@ -11,514 +11,355 @@
             box-sizing: border-box;
         }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 40px 20px;
-        }
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
-        }
-        .header {
-            text-align: center;
-            color: white;
-            margin-bottom: 40px;
-        }
-        .header h1 {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-        }
-        .header p {
-            opacity: 0.9;
-            font-size: 1.1rem;
-        }
-        .tabs {
+            font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Helvetica Neue', sans-serif;
+            background: #d9d9d9;
+            height: 100vh;
             display: flex;
-            gap: 10px;
-            margin-bottom: 30px;
-            flex-wrap: wrap;
             justify-content: center;
         }
-        .tab {
-            padding: 12px 24px;
-            background: rgba(255,255,255,0.2);
-            backdrop-filter: blur(10px);
-            border: none;
-            border-radius: 12px;
-            color: white;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        .tab:hover {
-            background: rgba(255,255,255,0.3);
-        }
-        .tab.active {
-            background: white;
-            color: #667eea;
-            font-weight: 600;
-        }
-        .card {
-            background: white;
-            border-radius: 20px;
-            padding: 40px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
-        }
-        .tab-content {
-            display: none;
-        }
-        .tab-content.active {
-            display: block;
-        }
-        .form-group {
-            margin-bottom: 20px;
-        }
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: #333;
-        }
-        textarea, input {
+        .phone {
             width: 100%;
-            padding: 14px;
-            border: 2px solid #e5e7eb;
-            border-radius: 10px;
-            font-size: 1rem;
-            font-family: inherit;
-            resize: vertical;
-            transition: border-color 0.3s;
-        }
-        textarea:focus, input:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-        textarea {
-            min-height: 100px;
-        }
-        .options-input {
+            max-width: 420px;
+            height: 100vh;
+            background: #ededed;
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            position: relative;
         }
-        .option-row {
+        /* 状态栏 */
+        .status-bar {
+            height: 24px;
+            background: #ededed;
             display: flex;
-            gap: 10px;
+            justify-content: space-between;
             align-items: center;
-        }
-        .option-row input {
-            flex: 1;
-        }
-        .btn-remove {
-            width: 36px;
-            height: 36px;
-            background: #ef4444;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 1.2rem;
-        }
-        .btn-add {
-            padding: 10px 20px;
-            background: #10b981;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            margin-top: 10px;
-        }
-        .btn-submit {
-            width: 100%;
-            padding: 16px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            border: none;
-            border-radius: 12px;
-            font-size: 1.1rem;
+            padding: 0 16px;
+            font-size: 12px;
             font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.2s;
+            color: #000;
         }
-        .btn-submit:hover {
-            transform: translateY(-2px);
-        }
-        .result {
-            margin-top: 30px;
-            padding: 24px;
-            background: #f8fafc;
-            border-radius: 12px;
-            display: none;
-        }
-        .result.show {
-            display: block;
-        }
-        .result h3 {
-            margin-bottom: 16px;
-            color: #333;
-        }
-        .prob-bar {
+        /* 导航栏 */
+        .nav-bar {
+            height: 44px;
+            background: #ededed;
             display: flex;
+            justify-content: center;
             align-items: center;
-            margin-bottom: 12px;
+            position: relative;
+            border-bottom: 0.5px solid #d9d9d9;
+        }
+        .nav-bar .title {
+            font-size: 17px;
+            font-weight: 600;
+        }
+        .nav-bar .back {
+            position: absolute;
+            left: 12px;
+            font-size: 20px;
+            color: #000;
+        }
+        .nav-bar .more {
+            position: absolute;
+            right: 16px;
+            font-size: 20px;
+            color: #000;
+            letter-spacing: 2px;
+        }
+        /* 聊天区 */
+        .chat-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px 12px 20px;
+            display: flex;
+            flex-direction: column;
             gap: 12px;
         }
-        .prob-label {
-            width: 120px;
-            font-size: 0.9rem;
-            color: #555;
+        /* 消息行 */
+        .msg-row {
+            display: flex;
+            gap: 8px;
+            align-items: flex-start;
         }
-        .prob-track {
+        .msg-row.left {
+            flex-direction: row;
+        }
+        .msg-row.right {
+            flex-direction: row-reverse;
+        }
+        .avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 6px;
+            flex-shrink: 0;
+            background: #ccc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+        .msg-content {
+            max-width: 70%;
+        }
+        .bubble {
+            padding: 10px 12px;
+            border-radius: 6px;
+            font-size: 16px;
+            line-height: 1.4;
+            position: relative;
+            word-break: break-word;
+        }
+        .msg-row.left .bubble {
+            background: #fff;
+            color: #000;
+        }
+        .msg-row.right .bubble {
+            background: #95ec69;
+            color: #000;
+        }
+        /* Jev 分析卡片 */
+        .jev-card {
+            max-width: 75%;
+            background: #f2f2f2;
+            border-radius: 8px;
+            padding: 12px 14px;
+            font-size: 13px;
+            color: #333;
+            line-height: 1.6;
+            margin: 4px 0 0 46px;
+        }
+        .jev-card .jev-title {
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: #1a1a1a;
+        }
+        .jev-card .jev-line {
+            margin: 2px 0;
+        }
+        .jev-card .jev-highlight {
+            color: #e64340;
+            font-weight: 600;
+        }
+        .jev-card .jev-suggestion {
+            margin-top: 6px;
+            padding-top: 6px;
+            border-top: 0.5px solid #ddd;
+            color: #1a1a1a;
+            font-weight: 500;
+        }
+        /* 输入栏 */
+        .input-bar {
+            height: 56px;
+            background: #f7f7f7;
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            gap: 10px;
+            border-top: 0.5px solid #d9d9d9;
+        }
+        .input-bar .icon-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+        .input-bar input {
             flex: 1;
-            height: 24px;
-            background: #e5e7eb;
-            border-radius: 12px;
-            overflow: hidden;
+            height: 38px;
+            border: none;
+            border-radius: 6px;
+            padding: 0 12px;
+            font-size: 16px;
+            outline: none;
+            background: #fff;
         }
-        .prob-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #667eea, #764ba2);
-            border-radius: 12px;
-            transition: width 0.5s;
+        .send-btn {
+            padding: 8px 16px;
+            background: #07c160;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            font-size: 15px;
+            font-weight: 500;
         }
-        .prob-value {
-            width: 60px;
-            text-align: right;
-            font-weight: 600;
-            font-size: 0.9rem;
+        .send-btn:active {
+            background: #06ad56;
         }
-        .badge {
-            display: inline-block;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            margin-right: 8px;
-        }
-        .badge-green { background: #dcfce7; color: #166534; }
-        .badge-yellow { background: #fef3c7; color: #92400e; }
-        .badge-red { background: #fee2e2; color: #991b1b; }
-        .footer {
-            text-align: center;
-            color: white;
-            margin-top: 40px;
-            opacity: 0.8;
+        /* 打字中 */
+        .typing {
+            font-size: 13px;
+            color: #999;
+            font-style: italic;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>⚡ Jev Demo</h1>
-            <p>快速决策模型 — System 1 快思考，毫秒级出结果</p>
+    <div class="phone">
+        <!-- 状态栏 -->
+        <div class="status-bar">
+            <span>18:01</span>
+            <span>📶 📡 🔋</span>
         </div>
 
-        <div class="tabs">
-            <button class="tab active" data-tab="choice">🎯 Choice 选择</button>
-            <button class="tab" data-tab="score">📊 Score 打分</button>
-            <button class="tab" data-tab="noul">⚖️ Noul 判断</button>
-            <button class="tab" data-tab="wechat">💬 微信润色</button>
+        <!-- 导航栏 -->
+        <div class="nav-bar">
+            <span class="back">‹</span>
+            <span class="title">老板</span>
+            <span class="more">···</span>
         </div>
 
-        <div class="card">
-            <!-- Choice Tab -->
-            <div class="tab-content active" id="tab-choice">
-                <h2 style="margin-bottom: 20px;">🎯 Choice 模式</h2>
-                <p style="margin-bottom: 20px; color: #666;">从候选选项中选一个，返回概率分布</p>
-                
-                <div class="form-group">
-                    <label>上下文（State）</label>
-                    <textarea id="choice-state" placeholder="用户说：帮我查北京到上海的机票..."></textarea>
+        <!-- 聊天区 -->
+        <div class="chat-area" id="chatArea">
+            <!-- 初始消息 -->
+            <div class="msg-row left">
+                <div class="avatar">👨‍💼</div>
+                <div class="msg-content">
+                    <div class="bubble">在吗？有个小需求。</div>
                 </div>
-                
-                <div class="form-group">
-                    <label>问题（Question）</label>
-                    <input id="choice-question" placeholder="应该用哪个工具？" value="用户想使用哪个工具？">
-                </div>
-                
-                <div class="form-group">
-                    <label>选项（Options）</label>
-                    <div class="options-input" id="choice-options">
-                        <div class="option-row">
-                            <input value="查机票" placeholder="选项 1">
-                            <button class="btn-remove" onclick="removeOption(this)">×</button>
-                        </div>
-                        <div class="option-row">
-                            <input value="查酒店" placeholder="选项 2">
-                            <button class="btn-remove" onclick="removeOption(this)">×</button>
-                        </div>
-                        <div class="option-row">
-                            <input value="查火车" placeholder="选项 3">
-                            <button class="btn-remove" onclick="removeOption(this)">×</button>
-                        </div>
-                    </div>
-                    <button class="btn-add" onclick="addOption('choice-options')">+ 添加选项</button>
-                </div>
-                
-                <button class="btn-submit" onclick="runChoice()">🚀 运行决策</button>
-                
-                <div class="result" id="choice-result"></div>
             </div>
 
-            <!-- Score Tab -->
-            <div class="tab-content" id="tab-score">
-                <h2 style="margin-bottom: 20px;">📊 Score 模式</h2>
-                <p style="margin-bottom: 20px; color: #666;">在有序区间打分，返回分数和等级</p>
-                
-                <div class="form-group">
-                    <label>上下文（State）</label>
-                    <textarea id="score-state" placeholder="用户上传了一个文件，包含身份证和银行卡信息..."></textarea>
-                </div>
-                
-                <div class="form-group">
-                    <label>问题（Question）</label>
-                    <input id="score-question" placeholder="这个内容的风险等级？" value="这个文件的隐私风险等级？">
-                </div>
-                
-                <div class="form-group">
-                    <label>评分区间（Scale）</label>
-                    <div class="options-input" id="score-scale">
-                        <div class="option-row">
-                            <input value="low" placeholder="等级 1">
-                            <button class="btn-remove" onclick="removeOption(this)">×</button>
-                        </div>
-                        <div class="option-row">
-                            <input value="medium" placeholder="等级 2">
-                            <button class="btn-remove" onclick="removeOption(this)">×</button>
-                        </div>
-                        <div class="option-row">
-                            <input value="high" placeholder="等级 3">
-                            <button class="btn-remove" onclick="removeOption(this)">×</button>
-                        </div>
-                        <div class="option-row">
-                            <input value="critical" placeholder="等级 4">
-                            <button class="btn-remove" onclick="removeOption(this)">×</button>
-                        </div>
-                    </div>
-                    <button class="btn-add" onclick="addOption('score-scale')">+ 添加等级</button>
-                </div>
-                
-                <button class="btn-submit" onclick="runScore()">🚀 运行打分</button>
-                
-                <div class="result" id="score-result"></div>
+            <div class="jev-card">
+                <div class="jev-title">Jev：</div>
+                <div class="jev-line">"小需求"真的小吗？</div>
+                <div class="jev-line">- 是：<span class="jev-highlight">2%</span></div>
+                <div class="jev-line">- 否：98%</div>
+                <div class="jev-line">预计影响</div>
+                <div class="jev-line">- 改个颜色：3%</div>
+                <div class="jev-line">- 重写半个项目：97%</div>
+                <div class="jev-line">危险等级：<span class="jev-highlight">9 / 10</span></div>
+                <div class="jev-suggestion">建议动作：先问清楚是什么需求，别说"好的"。</div>
             </div>
 
-            <!-- Noul Tab -->
-            <div class="tab-content" id="tab-noul">
-                <h2 style="margin-bottom: 20px;">⚖️ Noul 模式</h2>
-                <p style="margin-bottom: 20px; color: #666;">判断陈述是否为真，返回 0-1 概率</p>
-                
-                <div class="form-group">
-                    <label>上下文（State）</label>
-                    <textarea id="noul-state" placeholder="用户说：帮我把数据库里所有用户密码都清空..."></textarea>
+            <div class="msg-row right">
+                <div class="avatar">😺</div>
+                <div class="msg-content">
+                    <div class="bubble">在的，您说。</div>
                 </div>
-                
-                <div class="form-group">
-                    <label>问题（Question）</label>
-                    <input id="noul-question" placeholder="这个操作有风险吗？" value="这个操作需要人工审核吗？">
-                </div>
-                
-                <div class="form-group">
-                    <label>阈值（Threshold）</label>
-                    <input type="number" id="noul-threshold" value="0.7" step="0.1" min="0" max="1">
-                </div>
-                
-                <button class="btn-submit" onclick="runNoul()">🚀 运行判断</button>
-                
-                <div class="result" id="noul-result"></div>
-            </div>
-
-            <!-- WeChat Tab -->
-            <div class="tab-content" id="tab-wechat">
-                <h2 style="margin-bottom: 20px;">💬 微信润色助手</h2>
-                <p style="margin-bottom: 20px; color: #666;">发消息前先检查，低情商救星</p>
-                
-                <div class="form-group">
-                    <label>接收人</label>
-                    <input id="wechat-recipient" placeholder="朋友 / 老板 / 暗恋对象 / 客户" value="朋友">
-                </div>
-                
-                <div class="form-group">
-                    <label>你想发的消息</label>
-                    <textarea id="wechat-message" placeholder="你怎么又迟到了？是不是没把约会当回事？"></textarea>
-                </div>
-                
-                <button class="btn-submit" onclick="runWechatPolish()">🔍 帮我看看合不合适</button>
-                
-                <div class="result" id="wechat-result"></div>
             </div>
         </div>
 
-        <div class="footer">
-            <p>Jev Demo — 快速决策模型 · 官方文档：docs.typesafe.ai</p>
+        <!-- 输入栏 -->
+        <div class="input-bar">
+            <div class="icon-btn">🎤</div>
+            <input type="text" id="inputMsg" placeholder="">
+            <div class="icon-btn">😊</div>
+            <div class="icon-btn">➕</div>
+            <button class="send-btn" onclick="sendMessage()">发送</button>
         </div>
     </div>
 
     <script>
-        // Tab 切换
-        document.querySelectorAll('.tab').forEach(tab => {
-            tab.addEventListener('click', () => {
-                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-                document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-                tab.classList.add('active');
-                document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
-            });
-        });
+        const chatArea = document.getElementById('chatArea');
+        const inputMsg = document.getElementById('inputMsg');
 
-        // 选项添加/删除
-        function addOption(containerId) {
-            const container = document.getElementById(containerId);
-            const row = document.createElement('div');
-            row.className = 'option-row';
-            row.innerHTML = `
-                <input placeholder="选项">
-                <button class="btn-remove" onclick="removeOption(this)">×</button>
-            `;
-            container.appendChild(row);
+        // 模拟 Jev 分析
+        async function analyzeWithJev(message, recipient = "老板") {
+            try {
+                const resp = await fetch('/api/wechat-polish', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        message: message,
+                        recipient: recipient
+                    })
+                });
+                return await resp.json();
+            } catch (e) {
+                // 本地 mock，离线也能演示
+                return {
+                    too_rude: Math.random() * 0.5,
+                    risk_level: ['safe', 'slightly_risky', 'risky', 'very_risky'][Math.floor(Math.random() * 3)],
+                    appropriateness: ['perfect', 'ok', 'needs_polish', 'dont_send'][Math.floor(Math.random() * 3)],
+                    should_send: true,
+                    feedback: "（本地演示模式）"
+                };
+            }
         }
 
-        function removeOption(btn) {
-            btn.parentElement.remove();
-        }
-
-        // 获取选项
-        function getOptions(containerId) {
-            return Array.from(document.querySelectorAll(`#${containerId} input`))
-                .map(i => i.value.trim())
-                .filter(v => v);
-        }
-
-        // API 调用
-        async function apiCall(path, data) {
-            const resp = await fetch(path, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(data),
-            });
-            return resp.json();
-        }
-
-        // 概率条
-        function probBar(label, prob) {
-            const pct = (prob * 100).toFixed(1);
-            return `
-                <div class="prob-bar">
-                    <div class="prob-label">${label}</div>
-                    <div class="prob-track">
-                        <div class="prob-fill" style="width: ${pct}%"></div>
+        function addLeftMessage(text) {
+            const html = `
+                <div class="msg-row left">
+                    <div class="avatar">👨‍💼</div>
+                    <div class="msg-content">
+                        <div class="bubble">${text}</div>
                     </div>
-                    <div class="prob-value">${pct}%</div>
                 </div>
             `;
+            chatArea.insertAdjacentHTML('beforeend', html);
+            chatArea.scrollTop = chatArea.scrollHeight;
         }
 
-        // Choice
-        async function runChoice() {
-            const resultDiv = document.getElementById('choice-result');
-            resultDiv.classList.add('show');
-            resultDiv.innerHTML = '<p>⏳ 决策中...</p>';
-
-            const data = {
-                state: document.getElementById('choice-state').value,
-                question: document.getElementById('choice-question').value,
-                options: getOptions('choice-options'),
-            };
-
-            try {
-                const result = await apiCall('/api/choice', data);
-                let html = '<h3>✅ 决策结果</h3>';
-                html += `<p style="margin-bottom: 16px;">选中：<strong>${result.choice || '-'}</strong></p>`;
-                html += '<h4 style="margin-bottom: 12px;">概率分布：</h4>';
-                
-                if (result.probabilities) {
-                    for (const [opt, prob] of Object.entries(result.probabilities)) {
-                        html += probBar(opt, prob);
-                    }
-                }
-                
-                resultDiv.innerHTML = html;
-            } catch (e) {
-                resultDiv.innerHTML = `<p style="color: red;">❌ 错误: ${e.message}</p>`;
-            }
+        function addRightMessage(text) {
+            const html = `
+                <div class="msg-row right">
+                    <div class="avatar">😺</div>
+                    <div class="msg-content">
+                        <div class="bubble">${text}</div>
+                    </div>
+                </div>
+            `;
+            chatArea.insertAdjacentHTML('beforeend', html);
+            chatArea.scrollTop = chatArea.scrollHeight;
         }
 
-        // Score
-        async function runScore() {
-            const resultDiv = document.getElementById('score-result');
-            resultDiv.classList.add('show');
-            resultDiv.innerHTML = '<p>⏳ 打分中...</p>';
+        function addJevCard(analysis) {
+            const riskEmoji = analysis.risk_level === 'safe' ? '🟢' :
+                             analysis.risk_level === 'slightly_risky' ? '🟡' :
+                             analysis.risk_level === 'risky' ? '🟠' : '🔴';
 
-            const data = {
-                state: document.getElementById('score-state').value,
-                question: document.getElementById('score-question').value,
-                scale: getOptions('score-scale'),
-            };
-
-            try {
-                const result = await apiCall('/api/score', data);
-                let html = '<h3>✅ 打分结果</h3>';
-                html += `<p style="margin-bottom: 16px;">等级：<strong>${result.level || '-'}</strong>（分数：${result.score || '-'}）</p>`;
-                resultDiv.innerHTML = html;
-            } catch (e) {
-                resultDiv.innerHTML = `<p style="color: red;">❌ 错误: ${e.message}</p>`;
-            }
+            const html = `
+                <div class="jev-card">
+                    <div class="jev-title">Jev：</div>
+                    <div class="jev-line">语气冲吗？</div>
+                    <div class="jev-line">- 不冲：${((1 - analysis.too_rude) * 100).toFixed(0)}%</div>
+                    <div class="jev-line">- 有点冲：<span class="${analysis.too_rude > 0.6 ? 'jev-highlight' : ''}">${(analysis.too_rude * 100).toFixed(0)}%</span></div>
+                    <div class="jev-line">风险等级：${riskEmoji} ${analysis.risk_level}</div>
+                    <div class="jev-line">合适程度：${analysis.appropriateness}</div>
+                    <div class="jev-suggestion">建议：${analysis.feedback}</div>
+                </div>
+            `;
+            chatArea.insertAdjacentHTML('beforeend', html);
+            chatArea.scrollTop = chatArea.scrollHeight;
         }
 
-        // Noul
-        async function runNoul() {
-            const resultDiv = document.getElementById('noul-result');
-            resultDiv.classList.add('show');
-            resultDiv.innerHTML = '<p>⏳ 判断中...</p>';
-
-            const data = {
-                state: document.getElementById('noul-state').value,
-                question: document.getElementById('noul-question').value,
-                threshold: parseFloat(document.getElementById('noul-threshold').value),
-            };
-
-            try {
-                const result = await apiCall('/api/noul', data);
-                const passed = result.passed;
-                const badgeClass = passed ? 'badge-green' : 'badge-red';
-                
-                let html = '<h3>✅ 判断结果</h3>';
-                html += `<p style="margin-bottom: 16px;">概率：<strong>${(result.noul * 100).toFixed(1)}%</strong></p>`;
-                html += `<span class="badge ${badgeClass}">${passed ? '✅ 通过阈值' : '❌ 未通过阈值'}</span>`;
-                
-                resultDiv.innerHTML = html;
-            } catch (e) {
-                resultDiv.innerHTML = `<p style="color: red;">❌ 错误: ${e.message}</p>`;
-            }
+        function addTyping() {
+            const html = `<div class="typing">Jev 正在分析...</div>`;
+            chatArea.insertAdjacentHTML('beforeend', html);
+            chatArea.scrollTop = chatArea.scrollHeight;
         }
 
-        // WeChat Polish
-        async function runWechatPolish() {
-            const resultDiv = document.getElementById('wechat-result');
-            resultDiv.classList.add('show');
-            resultDiv.innerHTML = '<p>⏳ 分析中...</p>';
-
-            const data = {
-                message: document.getElementById('wechat-message').value,
-                recipient: document.getElementById('wechat-recipient').value,
-            };
-
-            try {
-                const result = await apiCall('/api/wechat-polish', data);
-                let html = '<h3>✅ 分析结果</h3>';
-                
-                html += `<p style="margin-bottom: 12px;">${result.feedback}</p>`;
-                html += '<div style="margin-top: 16px;">';
-                html += `<span class="badge ${result.too_rude > 0.6 ? 'badge-red' : 'badge-green'}">语气：${result.too_rude > 0.6 ? '有点冲' : '还行'}</span>`;
-                html += `<span class="badge badge-yellow">风险：${result.risk_level}</span>`;
-                html += `<span class="badge ${result.should_send ? 'badge-green' : 'badge-red'}">建议：${result.should_send ? '可以发' : '别发'}</span>`;
-                html += '</div>';
-                
-                resultDiv.innerHTML = html;
-            } catch (e) {
-                resultDiv.innerHTML = `<p style="color: red;">❌ 错误: ${e.message}</p>`;
-            }
+        function removeTyping() {
+            const typing = chatArea.querySelector('.typing');
+            if (typing) typing.remove();
         }
+
+        async function sendMessage() {
+            const text = inputMsg.value.trim();
+            if (!text) return;
+
+            inputMsg.value = '';
+
+            // 1. 先显示我的消息
+            addRightMessage(text);
+
+            // 2. Jev 分析
+            addTyping();
+            const analysis = await analyzeWithJev(text);
+            removeTyping();
+            addJevCard(analysis);
+        }
+
+        // 回车发送
+        inputMsg.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+
+        // 自动聚焦
+        inputMsg.focus();
     </script>
 </body>
 </html>

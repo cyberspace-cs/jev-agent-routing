@@ -11,8 +11,16 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', sans-serif;
+            background: #d9d9d9;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 480px;
+            margin: 0 auto;
             background: #ededed;
             min-height: 100vh;
+            position: relative;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
         }
         .header {
             background: #07c160;
@@ -23,7 +31,7 @@
         .header h1 { font-size: 20px; margin-bottom: 4px; }
         .header p { font-size: 13px; opacity: 0.9; }
         .category {
-            padding: 16px;
+            padding: 12px 16px;
             font-size: 14px;
             font-weight: 600;
             color: #666;
@@ -32,7 +40,7 @@
         .role-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 12px;
+            gap: 10px;
             padding: 12px;
         }
         .role-card {
@@ -97,8 +105,10 @@
         .start-btn {
             position: fixed;
             bottom: 20px;
-            left: 12px;
-            right: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: calc(100% - 24px);
+            max-width: 456px;
             padding: 14px;
             background: #07c160;
             color: white;
@@ -111,7 +121,7 @@
             z-index: 100;
             transition: all 0.3s;
         }
-        .start-btn:active { background: #06ad56; transform: scale(0.98); }
+        .start-btn:active { background: #06ad56; transform: translateX(-50%) scale(0.98); }
         .start-btn:disabled {
             background: #ccc;
             box-shadow: none;
@@ -119,61 +129,63 @@
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>✨ Jev 低情商救星</h1>
-        <p>实时分析你的聊天回复，帮你避开社交雷区</p>
-    </div>
+    <div class="container">
+        <div class="header">
+            <h1>✨ Jev 低情商救星</h1>
+            <p>实时分析你的聊天回复，帮你避开社交雷区</p>
+        </div>
 
-    <div class="category">👔 职场场景</div>
-    <div class="role-grid">
-        <div class="role-card" onclick="selectRole('boss', '👨‍💼', '老板')">
-            <div class="role-avatar">👨‍💼</div>
-            <div class="role-name">老板</div>
-            <div class="role-desc">汇报/提需求/挨骂</div>
+        <div class="category">👔 职场场景</div>
+        <div class="role-grid">
+            <div class="role-card" onclick="selectRole('boss', '👨‍💼', '老板')">
+                <div class="role-avatar">👨‍💼</div>
+                <div class="role-name">老板</div>
+                <div class="role-desc">汇报/提需求/挨骂</div>
+            </div>
+            <div class="role-card" onclick="selectRole('colleague', '👥', '同事')">
+                <div class="role-avatar">👥</div>
+                <div class="role-name">同事</div>
+                <div class="role-desc">协作/对接/甩锅</div>
+            </div>
         </div>
-        <div class="role-card" onclick="selectRole('colleague', '👥', '同事')">
-            <div class="role-avatar">👥</div>
-            <div class="role-name">同事</div>
-            <div class="role-desc">协作/对接/甩锅</div>
-        </div>
-    </div>
 
-    <div class="category">💕 亲密关系</div>
-    <div class="role-grid">
-        <div class="role-card" onclick="selectRole('girlfriend', '👩', '女友')">
-            <div class="role-avatar">👩</div>
-            <div class="role-name">女友</div>
-            <div class="role-desc">撒娇/吵架/查岗</div>
+        <div class="category">💕 亲密关系</div>
+        <div class="role-grid">
+            <div class="role-card" onclick="selectRole('girlfriend', '👩', '女友')">
+                <div class="role-avatar">👩</div>
+                <div class="role-name">女友</div>
+                <div class="role-desc">撒娇/吵架/查岗</div>
+            </div>
+            <div class="role-card" onclick="selectRole('boyfriend', '👨', '男友')">
+                <div class="role-avatar">👨</div>
+                <div class="role-name">男友</div>
+                <div class="role-desc">直男/开黑/道歉</div>
+            </div>
         </div>
-        <div class="role-card" onclick="selectRole('boyfriend', '👨', '男友')">
-            <div class="role-avatar">👨</div>
-            <div class="role-name">男友</div>
-            <div class="role-desc">直男/开黑/道歉</div>
-        </div>
-    </div>
 
-    <div class="category">🤝 好友社交</div>
-    <div class="role-grid">
-        <div class="role-card" onclick="selectRole('bestie', '👯', '闺蜜')">
-            <div class="role-avatar">👯</div>
-            <div class="role-name">闺蜜</div>
-            <div class="role-desc">吐槽/八卦/种草</div>
+        <div class="category">🤝 好友社交</div>
+        <div class="role-grid">
+            <div class="role-card" onclick="selectRole('bestie', '👯', '闺蜜')">
+                <div class="role-avatar">👯</div>
+                <div class="role-name">闺蜜</div>
+                <div class="role-desc">吐槽/八卦/种草</div>
+            </div>
+            <div class="role-card" onclick="selectRole('bro', '🤜🤛', '兄弟')">
+                <div class="role-avatar">🤜🤛</div>
+                <div class="role-name">兄弟</div>
+                <div class="role-desc">开黑/吹牛/约酒</div>
+            </div>
         </div>
-        <div class="role-card" onclick="selectRole('bro', '🤜🤛', '兄弟')">
-            <div class="role-avatar">🤜🤛</div>
-            <div class="role-name">兄弟</div>
-            <div class="role-desc">开黑/吹牛/约酒</div>
+
+        <div class="samples-section">
+            <h3 id="sampleTitle">📚 选择角色后查看预设对话样例</h3>
+            <div id="samplesList"></div>
         </div>
-    </div>
 
-    <div class="samples-section">
-        <h3 id="sampleTitle">📚 选择角色后查看预设对话样例</h3>
-        <div id="samplesList"></div>
+        <button class="start-btn" onclick="startChat()" id="startBtn" disabled>
+            请先选择一个角色
+        </button>
     </div>
-
-    <button class="start-btn" onclick="startChat()" id="startBtn" disabled>
-        请先选择一个角色
-    </button>
 
     <script>
         let selectedRole = null;

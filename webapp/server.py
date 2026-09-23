@@ -345,6 +345,108 @@ def wechat_polish(req: WechatPolishRequest):
     return results
 
 
+# ============ 分析对方话语 ============
+class AnalyzeThemRequest(BaseModel):
+    their_message: str
+    recipient: str = "朋友"
+    role: str = "friend"
+    conversation_history: list = []
+
+@app.post("/api/analyze-them")
+def analyze_them(req: AnalyzeThemRequest):
+    """分析对方说的话：意图、情绪、真实想法"""
+    role_relations = {
+        "boss": "老板-下属",
+        "colleague": "同事-同事",
+        "girlfriend": "情侣-女友",
+        "boyfriend": "情侣-男友",
+        "bestie": "闺蜜-闺蜜",
+        "bro": "兄弟-兄弟",
+        "friend": "朋友-朋友"
+    }
+    relation = role_relations.get(req.role, "朋友-朋友")
+
+    state = {
+        "dialogue": {
+            "me_said": req.conversation_history[-5:] if req.conversation_history else [],
+            "they_said": [req.their_message],
+            "their_latest": req.their_message,
+            "relation": relation,
+        }
+    }
+
+    questions = {
+        "their_intent": {
+            "type": "choice",
+            "instructions": "对方这句话的真实意图是什么？",
+            "criteria": {
+                "normal_chat": "正常聊天/陈述",
+                "test_water": "在试探你态度",
+                "dissatisfied": "对你有点不满/生气",
+                "need_help": "需要你帮忙/做事",
+                "want_comfort": "需要安慰/情绪支持",
+                "warning": "在警告/提醒你"
+            }
+        },
+        "their_emotion": {
+            "type": "score",
+            "instructions": "对方这句话的情绪强度？",
+            "criteria": ["很平静", "有点情绪", "情绪明显", "情绪很激动"]
+        },
+        "is_test": {
+            "type": "noul",
+            "instructions": "这句话是不是在考验你/给你送命题？"
+        }
+    }
+
+    answers = call_jev(state, questions)
+
+    intent_map = {
+        "normal_chat": "正常聊天",
+        "test_water": "在试探你态度",
+        "dissatisfied": "对你有点不满",
+        "need_help": "需要你帮忙",
+        "want_comfort": "需要安慰",
+        "warning": "在警告你"
+    }
+
+    emotion_val = answers.get("their_emotion", {}).get("score", 0)
+    if emotion_val < 1.0:
+        emotion_level = "很平静"
+    elif emotion_val < 2.0:
+        emotion_level = "有点情绪"
+    elif emotion_val < 3.0:
+        emotion_level = "情绪明显"
+    else:
+        emotion_level = "情绪很激动"
+
+    intent_key = answers.get("their_intent", {}).get("choice", "normal_chat")
+
+    # 生成建议
+    if answers.get("is_test", {}).get("noul", 0) > 0.6:
+        suggestion = "⚠️ 这是送命题！千万小心回答！"
+    elif intent_key == "dissatisfied":
+        suggestion = "💡 对方有点不满，先道歉再解释"
+    elif intent_key == "need_help":
+        suggestion = "💡 对方需要你做事，尽快回应"
+    elif intent_key == "want_comfort":
+        suggestion = "💡 对方需要安慰，先共情"
+    elif intent_key == "warning":
+        suggestion = "⚠️ 对方在警告你，别再犯同样的错"
+    elif emotion_val > 2.0:
+        suggestion = "💡 对方情绪激动，别硬碰硬"
+    else:
+        suggestion = "✅ 正常对话，正常回应就好"
+
+    return {
+        "intent": intent_map.get(intent_key, intent_key),
+        "emotion_level": emotion_level,
+        "emotion_score": emotion_val,
+        "is_test": answers.get("is_test", {}).get("noul", 0),
+        "suggestion": suggestion
+    }
+
+
 # ============ 前端页面 ============
 @app.get("/")
 def index():

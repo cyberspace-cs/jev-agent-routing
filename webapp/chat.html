@@ -113,6 +113,27 @@
             color: #e65100;
             font-weight: 500;
         }
+        /* 对方分析卡片样式 */
+        .them-analysis-card {
+            max-width: 75%;
+            background: #e3f2fd;
+            border-left: 3px solid #2196F3;
+            border-radius: 4px;
+            padding: 10px 12px;
+            font-size: 13px;
+            line-height: 1.6;
+            margin: 4px 0 0 46px;
+        }
+        .them-analysis-card .them-title { font-weight: 600; color: #1565c0; margin-bottom: 6px; }
+        .them-analysis-card .them-line { margin: 2px 0; }
+        .them-analysis-card .them-highlight { color: #e64340; font-weight: 600; }
+        .them-analysis-card .them-suggestion {
+            margin-top: 6px;
+            padding-top: 6px;
+            border-top: 1px dashed #90caf9;
+            color: #1565c0;
+            font-weight: 500;
+        }
         .input-bar {
             height: 56px;
             background: #f7f7f7;
@@ -292,6 +313,29 @@
             }
         }
 
+        async function analyzeThem(message) {
+            try {
+                const resp = await fetch('/jev/api/analyze-them', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        their_message: message,
+                        recipient: role.name || '朋友',
+                        role: role.id || 'friend',
+                        conversation_history: chatHistory.me_said.slice(-5)
+                    })
+                });
+                return await resp.json();
+            } catch (e) {
+                return {
+                    intent: '正常聊天',
+                    emotion_level: '很平静',
+                    is_test: 0,
+                    suggestion: '（本地演示模式）'
+                };
+            }
+        }
+
         function addLeftMessage(text) {
             const html = `
                 <div class="msg-row left">
@@ -360,6 +404,20 @@
             chatArea.scrollTop = chatArea.scrollHeight;
         }
 
+        function addThemAnalysisCard(analysis) {
+            const isTest = analysis.is_test > 0.6;
+            const html = `
+                <div class="them-analysis-card">
+                    <div class="them-title">🔍 对方心理分析</div>
+                    <div class="them-line">真实意图：${analysis.intent}</div>
+                    <div class="them-line">情绪强度：${analysis.emotion_level}</div>
+                    ${isTest ? `<div class="them-line">⚠️ 送命题概率：<span class="them-highlight">${(analysis.is_test * 100).toFixed(0)}%</span></div>` : ''}
+                    <div class="them-suggestion">💡 ${analysis.suggestion}</div>
+                </div>`;
+            chatArea.insertAdjacentHTML('beforeend', html);
+            chatArea.scrollTop = chatArea.scrollHeight;
+        }
+
         function addTyping() {
             const html = `<div class="typing">对方正在输入<span class="typing-dots"><span>.</span><span>.</span><span>.</span></span></div>`;
             chatArea.insertAdjacentHTML('beforeend', html);
@@ -384,7 +442,7 @@
 
             setTimeout(() => {
                 addTyping();
-                setTimeout(() => {
+                setTimeout(async () => {
                     removeTyping();
                     let nextMsg;
                     if (replyIdx < currentSample.replies.length) {
@@ -395,6 +453,10 @@
                     addLeftMessage(nextMsg);
                     chatHistory.they_said.push(nextMsg);
                     lastTheirMessage = nextMsg;
+
+                    // 分析对方的话
+                    const theirAnalysis = await analyzeThem(nextMsg);
+                    addThemAnalysisCard(theirAnalysis);
                 }, 1200);
             }, 500);
         }

@@ -350,6 +350,10 @@ def wechat_polish(req: WechatPolishRequest):
 def index():
     return FileResponse("index.html")
 
+@app.get("/chat.html")
+def chat():
+    return FileResponse("chat.html")
+
 
 if __name__ == "__main__":
     import uvicorn

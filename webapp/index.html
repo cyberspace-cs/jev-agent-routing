@@ -68,6 +68,7 @@
         }
         .samples-section {
             padding: 12px;
+            padding-bottom: 100px; /* 给底部按钮留空间 */
         }
         .samples-section h3 {
             font-size: 15px;
@@ -94,19 +95,27 @@
             line-height: 1.4;
         }
         .start-btn {
-            display: block;
-            width: calc(100% - 24px);
-            margin: 16px 12px;
+            position: fixed;
+            bottom: 20px;
+            left: 12px;
+            right: 12px;
             padding: 14px;
             background: #07c160;
             color: white;
             border: none;
-            border-radius: 8px;
+            border-radius: 12px;
             font-size: 16px;
             font-weight: 600;
             cursor: pointer;
+            box-shadow: 0 4px 12px rgba(7, 193, 96, 0.4);
+            z-index: 100;
+            transition: all 0.3s;
         }
-        .start-btn:active { background: #06ad56; }
+        .start-btn:active { background: #06ad56; transform: scale(0.98); }
+        .start-btn:disabled {
+            background: #ccc;
+            box-shadow: none;
+        }
     </style>
 </head>
 <body>

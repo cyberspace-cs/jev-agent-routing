@@ -313,35 +313,47 @@
         }
 
         function addJevCard(analysis) {
-            const riskEmoji = analysis.risk_level === 'safe' ? '🟢' :
-                             analysis.risk_level === 'slightly_risky' ? '🟡' :
-                             analysis.risk_level === 'risky' ? '🟠' : '🔴';
+            // 英文 key 翻译成中文
+            const riskMap = {
+                safe: '🟢 完全安全',
+                slightly_risky: '🟡 有点风险',
+                risky: '🟠 风险较高',
+                very_risky: '🔴 千万别发'
+            };
+            const apprMap = {
+                perfect: '✅ 非常合适',
+                ok: '👌 还行',
+                needs_polish: '✏️ 需要润色',
+                dont_send: '🚫 千万别发'
+            };
 
             let roleSpecificHtml = '';
             // 老板角色：显示专业度
             if (analysis.professionalism !== undefined) {
                 const profScore = (analysis.professionalism / 3 * 100).toFixed(0);
+                const profColor = analysis.professionalism < 1.5 ? 'jev-highlight' : '';
                 roleSpecificHtml += `
-                    <div class="jev-line">专业度：${profScore}%</div>
+                    <div class="jev-line">专业度：<span class="${profColor}">${profScore}%</span></div>
                 `;
             }
             // 女友角色：显示情绪理解度
             if (analysis.emotion_understanding !== undefined) {
                 const emoScore = (analysis.emotion_understanding / 3 * 100).toFixed(0);
+                const emoColor = analysis.emotion_understanding < 1.5 ? 'jev-highlight' : '';
                 roleSpecificHtml += `
-                    <div class="jev-line">情绪理解：${emoScore}%</div>
+                    <div class="jev-line">情绪理解：<span class="${emoColor}">${emoScore}%</span></div>
                 `;
             }
 
             const html = `
                 <div class="jev-card">
-                    <div class="jev-title">Jev 实时分析（针对${role.name || '对话'}）</div>
+                    <div class="jev-title">🔮 Jev 实时分析（针对${role.name || '对话'}）</div>
                     <div class="jev-line">语气冲吗？</div>
                     <div class="jev-line">- 不冲：${((1 - analysis.too_rude) * 100).toFixed(0)}%</div>
                     <div class="jev-line">- 有点冲：<span class="${analysis.too_rude > 0.6 ? 'jev-highlight' : ''}">${(analysis.too_rude * 100).toFixed(0)}%</span></div>
                     ${roleSpecificHtml}
-                    <div class="jev-line">风险等级：${riskEmoji} ${analysis.risk_level}</div>
-                    <div class="jev-line">合适程度：${analysis.appropriateness}</div>
+                    <div class="jev-line">风险等级：${riskMap[analysis.risk_level] || analysis.risk_level}</div>
+                    <div class="jev-line">合适程度：${apprMap[analysis.appropriateness] || analysis.appropriateness}</div>
                     <div class="jev-suggestion">💡 ${analysis.feedback}</div>
                 </div>`;
             chatArea.insertAdjacentHTML('beforeend', html);

@@ -482,58 +482,44 @@ def analyze_them(req: AnalyzeThemRequest):
 
     # 生成建议回复
     reply_templates = {
-        "boss": {
-            "need_help": "收到，我马上看一下，下午给您反馈。",
-            "dissatisfied": "抱歉老板，我马上改。",
-            "normal_chat": "好的老板，收到。",
-            "test_water": "老板您说，我听着呢。",
-            "warning": "好的，我记住了，下次不会了。",
-            "want_comfort": "老板您辛苦了，注意休息。"
-        },
-        "girlfriend": {
-            "want_comfort": "怎么了宝贝？谁惹你不开心了，跟我说说。",
-            "normal_chat": "怎么啦宝？我在呢。",
-            "test_water": "怎么了？是不是想我啦？",
-            "dissatisfied": "对不起嘛宝，我错了，别生气好不好？",
-            "need_help": "没问题宝，包在我身上！",
-            "warning": "好的我知道了，下次一定改。"
-        },
-        "boyfriend": {
-            "normal_chat": "咋了兄弟？",
-            "need_help": "说吧，啥事？",
-            "test_water": "你这话啥意思？直说。",
-            "dissatisfied": "啊？我干啥了？",
-            "want_comfort": "咋了这是？出来喝一杯？",
-            "warning": "知道了知道了。"
-        },
-        "colleague": {
-            "need_help": "收到，我这边没问题，我们对齐一下时间。",
-            "normal_chat": "好的，收到。",
-            "test_water": "你说的是哪个版本？我确认一下。",
-            "dissatisfied": "抱歉，我马上处理。",
-            "warning": "好的，我注意一下。",
-            "want_comfort": "辛苦了。"
-        },
-        "bestie": {
-            "normal_chat": "啊啊啊怎么了！快说！",
-            "want_comfort": "抱抱抱抱，怎么了跟我说！",
-            "test_water": "？？？你跟我还有啥不能说的？",
-            "dissatisfied": "咋了这是？谁惹你了？",
-            "need_help": "必须帮！说！",
-            "warning": "好的好的，我记住了。"
-        },
-        "bro": {
-            "normal_chat": "咋了兄弟？",
-            "need_help": "说吧，啥事？",
-            "test_water": "你这话啥意思？直说。",
-            "dissatisfied": "啊？我干啥了？",
-            "want_comfort": "咋了这是？出来喝一杯？",
-            "warning": "知道了知道了。"
-        }
+        "boss": [
+            "收到，我马上看一下，下午给您反馈。",
+            "好的老板，我今天下班前给您。",
+            "抱歉老板，我调整一下，稍后发您。"
+        ],
+        "girlfriend": [
+            "怎么了宝？我在呢。",
+            "抱抱，别生气啦，我错了嘛。",
+            "想你啦，你在干嘛呀？"
+        ],
+        "boyfriend": [
+            "咋了？",
+            "行吧，听你的。",
+            "知道了。"
+        ],
+        "colleague": [
+            "收到，我这边没问题。",
+            "好的，我们对齐一下时间。",
+            "抱歉，我马上改。"
+        ],
+        "bestie": [
+            "啊啊啊怎么了！快说！",
+            "我跟你说！！！",
+            "真的假的？？？"
+        ],
+        "bro": [
+            "咋了兄弟？",
+            "行，上号。",
+            "喝！老地方。"
+        ],
+        "friend": [
+            "好的，收到。",
+            "没问题。",
+            "行，听你的。"
+        ]
     }
 
-    role_templates = reply_templates.get(req.role, reply_templates["friend"])
-    suggested_reply = role_templates.get(intent_key, role_templates["normal_chat"])
+    suggested_replies = reply_templates.get(req.role, reply_templates["friend"])
 
     return {
         "intent": intent_map.get(intent_key, intent_key),
@@ -543,7 +529,7 @@ def analyze_them(req: AnalyzeThemRequest):
         "is_test": answers.get("is_test", {}).get("noul", 0),
         "is_test_percent": round(answers.get("is_test", {}).get("noul", 0) * 100),
         "suggestion": suggestion,
-        "suggested_reply": suggested_reply
+        "suggested_replies": suggested_replies
     }
 
 

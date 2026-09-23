@@ -511,6 +511,19 @@
                 }).join('');
             }
 
+            // 生成建议回复列表
+            let suggestedRepliesHtml = '';
+            if (analysis.suggested_replies && analysis.suggested_replies.length > 0) {
+                suggestedRepliesHtml = `
+                    <div class="suggested-reply-box">
+                        <div class="suggested-reply-label">💬 建议回复（点击直接用）：</div>
+                        ${analysis.suggested_replies.map((reply, idx) =>
+                            `<div class="suggested-reply-text" onclick="useSuggestedReply('${reply.replace(/'/g, "\\'")}')">${reply}</div>`
+                        ).join('')}
+                    </div>
+                `;
+            }
+
             const html = `
                 <div class="them-analysis-card">
                     <div class="them-title">🔍 对方心理分析</div>
@@ -519,12 +532,7 @@
                     <div class="them-line">情绪强度：${analysis.emotion_level}（${analysis.emotion_score_percent || 0}%）</div>
                     ${isTest ? `<div class="them-line">⚠️ 送命题概率：<span class="them-highlight">${analysis.is_test_percent || 0}%</span></div>` : ''}
                     <div class="them-suggestion">💡 ${analysis.suggestion}</div>
-                    ${analysis.suggested_reply ? `
-                        <div class="suggested-reply-box">
-                            <div class="suggested-reply-label">💬 建议回复：</div>
-                            <div class="suggested-reply-text" onclick="useSuggestedReply('${analysis.suggested_reply.replace(/'/g, "\\'")}')">${analysis.suggested_reply}</div>
-                        </div>
-                    ` : ''}
+                    ${suggestedRepliesHtml}
                 </div>`;
             chatArea.insertAdjacentHTML('beforeend', html);
             chatArea.scrollTop = chatArea.scrollHeight;

@@ -1,0 +1,363 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>微信 - Jev 低情商救星</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', sans-serif;
+            background: #d9d9d9;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+        }
+        .phone {
+            width: 100%;
+            max-width: 420px;
+            height: 100vh;
+            background: #ededed;
+            display: flex;
+            flex-direction: column;
+        }
+        .status-bar {
+            height: 24px;
+            background: #ededed;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 16px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .nav-bar {
+            height: 44px;
+            background: #ededed;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            border-bottom: 0.5px solid #d9d9d9;
+        }
+        .nav-bar .back {
+            position: absolute;
+            left: 12px;
+            font-size: 20px;
+            color: #000;
+            cursor: pointer;
+        }
+        .nav-bar .title { font-size: 17px; font-weight: 600; }
+        .chat-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .msg-row {
+            display: flex;
+            gap: 8px;
+            align-items: flex-start;
+            animation: fadeIn 0.3s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .msg-row.left { flex-direction: row; }
+        .msg-row.right { flex-direction: row-reverse; }
+        .avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 6px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+        .msg-row.left .avatar { background: #4CAF50; }
+        .msg-row.right .avatar { background: #2196F3; }
+        .msg-content { max-width: 70%; }
+        .bubble {
+            padding: 10px 12px;
+            border-radius: 6px;
+            font-size: 16px;
+            line-height: 1.4;
+            word-break: break-word;
+        }
+        .msg-row.left .bubble { background: white; color: black; }
+        .msg-row.right .bubble { background: #95ec69; color: black; }
+        .jev-card {
+            max-width: 75%;
+            background: #fff3e0;
+            border-left: 3px solid #ff9800;
+            border-radius: 4px;
+            padding: 10px 12px;
+            font-size: 13px;
+            line-height: 1.6;
+            margin: 4px 0 0 46px;
+        }
+        .jev-card .jev-title { font-weight: 600; color: #e65100; margin-bottom: 6px; }
+        .jev-card .jev-line { margin: 2px 0; }
+        .jev-card .jev-highlight { color: #e64340; font-weight: 600; }
+        .jev-card .jev-suggestion {
+            margin-top: 6px;
+            padding-top: 6px;
+            border-top: 1px dashed #ffcc80;
+            color: #e65100;
+            font-weight: 500;
+        }
+        .input-bar {
+            height: 56px;
+            background: #f7f7f7;
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            gap: 10px;
+            border-top: 0.5px solid #d9d9d9;
+        }
+        .input-bar .icon-btn {
+            width: 36px; height: 36px;
+            border-radius: 50%;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+        .input-bar input {
+            flex: 1; height: 38px;
+            border: none; border-radius: 6px;
+            padding: 0 12px;
+            font-size: 16px;
+            outline: none;
+            background: white;
+        }
+        .send-btn {
+            padding: 8px 16px;
+            background: #07c160;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 15px;
+            font-weight: 500;
+        }
+        .typing { font-size: 13px; color: #999; font-style: italic; }
+        .typing-dots span { animation: blink 1.4s infinite both; }
+        .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes blink { 0% { opacity: 0.2; } 20% { opacity: 1; } 100% { opacity: 0.2; } }
+    </style>
+</head>
+<body>
+    <div class="phone">
+        <div class="status-bar">
+            <span>18:30</span>
+            <span>📶 📡 🔋</span>
+        </div>
+
+        <div class="nav-bar">
+            <span class="back" onclick="goBack()">‹</span>
+            <span class="title" id="chatTitle">对话</span>
+        </div>
+
+        <div class="chat-area" id="chatArea"></div>
+
+        <div class="input-bar">
+            <div class="icon-btn">🎤</div>
+            <input type="text" id="inputMsg" placeholder="发送消息...">
+            <div class="icon-btn">😊</div>
+            <div class="icon-btn">➕</div>
+            <button class="send-btn" onclick="sendMessage()">发送</button>
+        </div>
+    </div>
+
+    <script>
+        const chatArea = document.getElementById('chatArea');
+        const inputMsg = document.getElementById('inputMsg');
+
+        // 获取角色信息
+        const role = JSON.parse(localStorage.getItem('jev_role') || '{}');
+        const sampleIdx = parseInt(localStorage.getItem('jev_sample') || '0');
+        document.getElementById('chatTitle').textContent = role.name || '对话';
+
+        // 不同角色的预设对话样例
+        const roleSamples = {
+            boss: [
+                {
+                    initial: "在吗？有个小需求。",
+                    replies: ["这个需求很简单，就是改个颜色。", "什么时候能做完？", "哦对了，还要加个导出功能。", "这个效果不对啊，能不能调一下？", "客户说还要支持手机端。"]
+                },
+                {
+                    initial: "这个功能什么时候能做完？",
+                    replies: ["客户那边催得紧。", "哦，对了，还要加个数据看板。", "辛苦了，先这样吧。"]
+                },
+                {
+                    initial: "你做的这个效果不对啊。",
+                    replies: ["能不能调一下？", "跟设计稿不一样啊。", "算了，先这样吧。"]
+                }
+            ],
+            girlfriend: [
+                {
+                    initial: "你在干嘛呀？",
+                    replies: ["哦，那你忙吧。", "我跟你说！今天我看到一个巨好看的包！", "你都不怎么陪我聊天了。"]
+                },
+                {
+                    initial: "你是不是不爱我了？",
+                    replies: ["你今天都没怎么理我...", "你都不关心我了。", "好吧，那你继续忙吧。"]
+                },
+                {
+                    initial: "我昨天穿的那条裙子好看吗？",
+                    replies: ["就是我们上次逛街买的那条！", "你根本就没认真看我！"]
+                }
+            ],
+            bestie: [
+                {
+                    initial: "我跟你说！我们老板真的太傻逼了！",
+                    replies: ["他今天又让我改方案！第五版了！", "而且他还说'我没意见，就是感觉不对'！", "你说气不气！"]
+                },
+                {
+                    initial: "我跟你说！这家店巨好看！！",
+                    replies: ["就是那家网红店！你一定要去！", "他们家的包包都超有设计感！"]
+                }
+            ],
+            bro: [
+                {
+                    initial: "上号！五排就差你了！",
+                    replies: ["快点快点！他们都在等了！", "你今天要是再菜我就把你举报了！"]
+                },
+                {
+                    initial: "出来喝点？老地方。",
+                    replies: ["好久没聚了！", "就咱俩，不叫别人。"]
+                }
+            ],
+            colleague: [
+                {
+                    initial: "哎，那个需求你那边做完了吗？",
+                    replies: ["客户那边催了好几次了。", "哦，对了，还要改个接口。"]
+                }
+            ],
+            boyfriend: [
+                {
+                    initial: "宝宝，我今天加班呢。",
+                    replies: ["晚上不回去吃饭了。", "你先吃吧，别等我了。"]
+                }
+            ]
+        };
+
+        // 初始化对话
+        const currentSample = roleSamples[role.id]?.[sampleIdx] || { initial: "你好", replies: ["你好！"] };
+        let replyIdx = 0;
+
+        // 对方先发第一条
+        setTimeout(() => {
+            addLeftMessage(currentSample.initial);
+        }, 300);
+
+        async function analyzeWithJev(message) {
+            try {
+                const resp = await fetch('/jev/api/wechat-polish', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ message, recipient: role.name || '朋友' })
+                });
+                return await resp.json();
+            } catch (e) {
+                return {
+                    too_rude: Math.random() * 0.3,
+                    risk_level: 'safe',
+                    appropriateness: 'ok',
+                    should_send: true,
+                    feedback: "（本地演示模式）"
+                };
+            }
+        }
+
+        function addLeftMessage(text) {
+            const html = `
+                <div class="msg-row left">
+                    <div class="avatar">${role.avatar || '👤'}</div>
+                    <div class="msg-content"><div class="bubble">${text}</div></div>
+                </div>`;
+            chatArea.insertAdjacentHTML('beforeend', html);
+            chatArea.scrollTop = chatArea.scrollHeight;
+        }
+
+        function addRightMessage(text) {
+            const html = `
+                <div class="msg-row right">
+                    <div class="avatar">😺</div>
+                    <div class="msg-content"><div class="bubble">${text}</div></div>
+                </div>`;
+            chatArea.insertAdjacentHTML('beforeend', html);
+            chatArea.scrollTop = chatArea.scrollHeight;
+        }
+
+        function addJevCard(analysis) {
+            const riskEmoji = analysis.risk_level === 'safe' ? '🟢' :
+                             analysis.risk_level === 'slightly_risky' ? '🟡' :
+                             analysis.risk_level === 'risky' ? '🟠' : '🔴';
+            const html = `
+                <div class="jev-card">
+                    <div class="jev-title">Jev 实时分析</div>
+                    <div class="jev-line">语气冲吗？</div>
+                    <div class="jev-line">- 不冲：${((1 - analysis.too_rude) * 100).toFixed(0)}%</div>
+                    <div class="jev-line">- 有点冲：<span class="${analysis.too_rude > 0.6 ? 'jev-highlight' : ''}">${(analysis.too_rude * 100).toFixed(0)}%</span></div>
+                    <div class="jev-line">风险等级：${riskEmoji} ${analysis.risk_level}</div>
+                    <div class="jev-line">合适程度：${analysis.appropriateness}</div>
+                    <div class="jev-suggestion">💡 ${analysis.feedback}</div>
+                </div>`;
+            chatArea.insertAdjacentHTML('beforeend', html);
+            chatArea.scrollTop = chatArea.scrollHeight;
+        }
+
+        function addTyping() {
+            const html = `<div class="typing">对方正在输入<span class="typing-dots"><span>.</span><span>.</span><span>.</span></span></div>`;
+            chatArea.insertAdjacentHTML('beforeend', html);
+            chatArea.scrollTop = chatArea.scrollHeight;
+        }
+
+        function removeTyping() {
+            const t = chatArea.querySelector('.typing');
+            if (t) t.remove();
+        }
+
+        async function sendMessage() {
+            const text = inputMsg.value.trim();
+            if (!text) return;
+            inputMsg.value = '';
+
+            addRightMessage(text);
+            const analysis = await analyzeWithJev(text);
+            addJevCard(analysis);
+
+            setTimeout(() => {
+                addTyping();
+                setTimeout(() => {
+                    removeTyping();
+                    if (replyIdx < currentSample.replies.length) {
+                        addLeftMessage(currentSample.replies[replyIdx++]);
+                    } else {
+                        addLeftMessage("好的，就先这样吧！");
+                    }
+                }, 1200);
+            }, 500);
+        }
+
+        function goBack() {
+            window.location.href = '/jev/';
+        }
+
+        inputMsg.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+        inputMsg.focus();
+    </script>
+</body>
+</html>

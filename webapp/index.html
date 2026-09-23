@@ -6,360 +6,262 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>微信 - Jev 低情商救星</title>
+    <title>Jev 低情商救星 - 角色选择</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Helvetica Neue', sans-serif;
-            background: #d9d9d9;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-        }
-        .phone {
-            width: 100%;
-            max-width: 420px;
-            height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', sans-serif;
             background: #ededed;
-            display: flex;
-            flex-direction: column;
-            position: relative;
+            min-height: 100vh;
         }
-        .status-bar {
-            height: 24px;
-            background: #ededed;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0 16px;
-            font-size: 12px;
-            font-weight: 600;
-            color: #000;
-        }
-        .nav-bar {
-            height: 44px;
-            background: #ededed;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            position: relative;
-            border-bottom: 0.5px solid #d9d9d9;
-        }
-        .nav-bar .title {
-            font-size: 17px;
-            font-weight: 600;
-        }
-        .nav-bar .back {
-            position: absolute;
-            left: 12px;
-            font-size: 20px;
-            color: #000;
-        }
-        .nav-bar .more {
-            position: absolute;
-            right: 16px;
-            font-size: 20px;
-            color: #000;
-            letter-spacing: 2px;
-        }
-        .chat-area {
-            flex: 1;
-            overflow-y: auto;
-            padding: 12px 12px 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-        .msg-row {
-            display: flex;
-            gap: 8px;
-            align-items: flex-start;
-            animation: fadeIn 0.3s ease;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .msg-row.left { flex-direction: row; }
-        .msg-row.right { flex-direction: row-reverse; }
-        .avatar {
-            width: 38px;
-            height: 38px;
-            border-radius: 6px;
-            flex-shrink: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-        }
-        .msg-row.left .avatar { background: #4CAF50; }
-        .msg-row.right .avatar { background: #2196F3; }
-        .msg-content { max-width: 70%; }
-        .bubble {
-            padding: 10px 12px;
-            border-radius: 6px;
-            font-size: 16px;
-            line-height: 1.4;
-            word-break: break-word;
-            position: relative;
-        }
-        .msg-row.left .bubble { background: #fff; color: #000; }
-        .msg-row.right .bubble { background: #95ec69; color: #000; }
-        .jev-card {
-            max-width: 75%;
-            background: #fff3e0;
-            border-left: 3px solid #ff9800;
-            border-radius: 4px;
-            padding: 10px 12px;
-            font-size: 13px;
-            color: #333;
-            line-height: 1.6;
-            margin: 4px 0 0 46px;
-            animation: fadeIn 0.4s ease;
-        }
-        .jev-card .jev-title {
-            font-weight: 600;
-            margin-bottom: 6px;
-            color: #e65100;
-        }
-        .jev-card .jev-line { margin: 2px 0; }
-        .jev-card .jev-highlight { color: #e64340; font-weight: 600; }
-        .jev-card .jev-suggestion {
-            margin-top: 6px;
-            padding-top: 6px;
-            border-top: 1px dashed #ffcc80;
-            color: #e65100;
-            font-weight: 500;
-        }
-        .input-bar {
-            height: 56px;
-            background: #f7f7f7;
-            display: flex;
-            align-items: center;
-            padding: 0 10px;
-            gap: 10px;
-            border-top: 0.5px solid #d9d9d9;
-        }
-        .input-bar .icon-btn {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            background: #fff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            flex-shrink: 0;
-        }
-        .input-bar input {
-            flex: 1;
-            height: 38px;
-            border: none;
-            border-radius: 6px;
-            padding: 0 12px;
-            font-size: 16px;
-            outline: none;
-            background: #fff;
-        }
-        .send-btn {
-            padding: 8px 16px;
+        .header {
             background: #07c160;
-            color: #fff;
-            border: none;
-            border-radius: 6px;
-            font-size: 15px;
-            font-weight: 500;
+            color: white;
+            padding: 20px 16px;
+            text-align: center;
         }
-        .send-btn:active { background: #06ad56; }
-        .typing {
-            font-size: 13px;
+        .header h1 { font-size: 20px; margin-bottom: 4px; }
+        .header p { font-size: 13px; opacity: 0.9; }
+        .category {
+            padding: 16px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #666;
+            background: #f5f5f5;
+        }
+        .role-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            padding: 12px;
+        }
+        .role-card {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            border: 2px solid transparent;
+        }
+        .role-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .role-card.active {
+            border-color: #07c160;
+            background: #f0fff4;
+        }
+        .role-avatar {
+            font-size: 40px;
+            margin-bottom: 8px;
+        }
+        .role-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 4px;
+        }
+        .role-desc {
+            font-size: 12px;
             color: #999;
-            font-style: italic;
         }
-        .typing-dots span {
-            animation: blink 1.4s infinite both;
+        .samples-section {
+            padding: 12px;
         }
-        .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
-        .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
-        @keyframes blink {
-            0% { opacity: 0.2; }
-            20% { opacity: 1; }
-            100% { opacity: 0.2; }
+        .samples-section h3 {
+            font-size: 15px;
+            margin-bottom: 12px;
+            color: #333;
         }
+        .sample-card {
+            background: white;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            border-left: 3px solid #07c160;
+        }
+        .sample-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 4px;
+        }
+        .sample-preview {
+            font-size: 12px;
+            color: #999;
+            line-height: 1.4;
+        }
+        .start-btn {
+            display: block;
+            width: calc(100% - 24px);
+            margin: 16px 12px;
+            padding: 14px;
+            background: #07c160;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .start-btn:active { background: #06ad56; }
     </style>
 </head>
 <body>
-    <div class="phone">
-        <div class="status-bar">
-            <span>18:30</span>
-            <span>📶 📡 🔋</span>
-        </div>
+    <div class="header">
+        <h1>✨ Jev 低情商救星</h1>
+        <p>实时分析你的聊天回复，帮你避开社交雷区</p>
+    </div>
 
-        <div class="nav-bar">
-            <span class="back">‹</span>
-            <span class="title">老板</span>
-            <span class="more">···</span>
+    <div class="category">👔 职场场景</div>
+    <div class="role-grid">
+        <div class="role-card" onclick="selectRole('boss', '👨‍💼', '老板')">
+            <div class="role-avatar">👨‍💼</div>
+            <div class="role-name">老板</div>
+            <div class="role-desc">汇报/提需求/挨骂</div>
         </div>
-
-        <div class="chat-area" id="chatArea">
-            <!-- 对话会动态加载 -->
-        </div>
-
-        <div class="input-bar">
-            <div class="icon-btn">🎤</div>
-            <input type="text" id="inputMsg" placeholder="发送消息...">
-            <div class="icon-btn">😊</div>
-            <div class="icon-btn">➕</div>
-            <button class="send-btn" onclick="sendMessage()">发送</button>
+        <div class="role-card" onclick="selectRole('colleague', '👥', '同事')">
+            <div class="role-avatar">👥</div>
+            <div class="role-name">同事</div>
+            <div class="role-desc">协作/对接/甩锅</div>
         </div>
     </div>
 
-    <script>
-        const chatArea = document.getElementById('chatArea');
-        const inputMsg = document.getElementById('inputMsg');
+    <div class="category">💕 亲密关系</div>
+    <div class="role-grid">
+        <div class="role-card" onclick="selectRole('girlfriend', '👩', '女友')">
+            <div class="role-avatar">👩</div>
+            <div class="role-name">女友</div>
+            <div class="role-desc">撒娇/吵架/查岗</div>
+        </div>
+        <div class="role-card" onclick="selectRole('boyfriend', '👨', '男友')">
+            <div class="role-avatar">👨</div>
+            <div class="role-name">男友</div>
+            <div class="role-desc">直男/开黑/道歉</div>
+        </div>
+    </div>
 
-        // 对话历史
-        const history = {
-            me_said: [],
-            they_said: []
+    <div class="category">🤝 好友社交</div>
+    <div class="role-grid">
+        <div class="role-card" onclick="selectRole('bestie', '👯', '闺蜜')">
+            <div class="role-avatar">👯</div>
+            <div class="role-name">闺蜜</div>
+            <div class="role-desc">吐槽/八卦/种草</div>
+        </div>
+        <div class="role-card" onclick="selectRole('bro', '🤜🤛', '兄弟')">
+            <div class="role-avatar">🤜🤛</div>
+            <div class="role-name">兄弟</div>
+            <div class="role-desc">开黑/吹牛/约酒</div>
+        </div>
+    </div>
+
+    <div class="samples-section">
+        <h3 id="sampleTitle">📚 选择角色后查看预设对话样例</h3>
+        <div id="samplesList"></div>
+    </div>
+
+    <button class="start-btn" onclick="startChat()" id="startBtn" disabled>
+        请先选择一个角色
+    </button>
+
+    <script>
+        let selectedRole = null;
+        let selectedSample = null;
+
+        // 预设对话样例
+        const samples = {
+            boss: [
+                {
+                    title: '💼 老板突然说"有个小需求"',
+                    preview: '老板：在吗？有个小需求。\n（这真的是小需求吗？）'
+                },
+                {
+                    title: '😤 老板问"什么时候能做完？"',
+                    preview: '老板：这个功能什么时候能做完？\n（怎么回答不会显得太慢？）'
+                },
+                {
+                    title: '👀 老板说"这个效果不对"',
+                    preview: '老板：你做的这个效果不对啊，能不能调一下？\n（怎么回不背锅？）'
+                }
+            ],
+            girlfriend: [
+                {
+                    title: '💕 女友撒娇："你在干嘛？"',
+                    preview: '女友：你在干嘛呀？\n（怎么回才不会显得敷衍？）'
+                },
+                {
+                    title: '😢 女友说："你是不是不爱我了"',
+                    preview: '女友：你今天都没怎么理我...\n（怎么哄？在线等！）'
+                },
+                {
+                    title: '🎁 女友问："我昨天穿的裙子好看吗？"',
+                    preview: '女友：我昨天穿的那条裙子好看吗？\n（死亡送命题！）'
+                }
+            ],
+            bestie: [
+                {
+                    title: '👯 闺蜜吐槽："我们老板太傻逼了"',
+                    preview: '闺蜜：我跟你说！我们老板真的太傻逼了！\n（怎么陪她一起骂？）'
+                },
+                {
+                    title: '🛍️ 闺蜜种草："这家店巨好看！"',
+                    preview: '闺蜜：我跟你说！这家店巨好看！！\n（怎么接才不会被当成种草机器？）'
+                }
+            ],
+            bro: [
+                {
+                    title: '🎮 兄弟开黑："上号！"',
+                    preview: '兄弟：上号！五排就差你了！\n（菜了怎么甩锅？）'
+                },
+                {
+                    title: '🍺 兄弟约酒："出来喝点？"',
+                    preview: '兄弟：出来喝点？老地方。\n（怎么拒绝才不不够兄弟？）'
+                }
+            ]
         };
 
-        // 对方回复库（模拟微信对话）
-        const theirReplies = [
-            "在吗？有个小需求。",
-            "这个需求很简单，就是改个颜色。",
-            "什么时候能做完？",
-            "哦，对了，还要加个导出功能。",
-            "这个效果不对啊，能不能调一下？",
-            "客户说还要支持手机端。",
-            "你看看能不能今天搞定？",
-            "刚才那个需求不用做了。",
-            "辛苦了，请你吃饭！"
-        ];
-        let replyIndex = 0;
+        function selectRole(roleId, avatar, name) {
+            selectedRole = { id: roleId, avatar, name };
+            selectedSample = null;
 
-        // 对方先发消息
-        setTimeout(() => {
-            addLeftMessage(theirReplies[replyIndex++]);
-        }, 500);
+            // 更新 UI
+            document.querySelectorAll('.role-card').forEach(card => {
+                card.classList.remove('active');
+            });
+            event.currentTarget.classList.add('active');
 
-        async function analyzeWithJev(message) {
-            try {
-                const resp = await fetch('/jev/api/wechat-polish', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({
-                        message: message,
-                        recipient: "老板"
-                    })
-                });
-                return await resp.json();
-            } catch (e) {
-                return {
-                    too_rude: Math.random() * 0.3,
-                    risk_level: 'safe',
-                    appropriateness: 'ok',
-                    should_send: true,
-                    feedback: "（本地演示模式）"
-                };
+            // 显示样例
+            const sampleList = samples[roleId] || [];
+            document.getElementById('sampleTitle').textContent = `📚 ${name}的预设对话样例`;
+            document.getElementById('samplesList').innerHTML = sampleList.map((s, i) => `
+                <div class="sample-card" onclick="selectSample(${i})" id="sample-${i}">
+                    <div class="sample-title">${s.title}</div>
+                    <div class="sample-preview">${s.preview.replace(/\n/g, '<br>')}</div>
+                </div>
+            `).join('');
+
+            document.getElementById('startBtn').textContent = `开始和${name}聊天`;
+            document.getElementById('startBtn').disabled = false;
+        }
+
+        function selectSample(index) {
+            selectedSample = index;
+            document.querySelectorAll('.sample-card').forEach(card => {
+                card.style.background = 'white';
+            });
+            document.getElementById(`sample-${index}`).style.background = '#f0fff4';
+        }
+
+        function startChat() {
+            if (!selectedRole) return;
+            localStorage.setItem('jev_role', JSON.stringify(selectedRole));
+            if (selectedSample !== null) {
+                localStorage.setItem('jev_sample', selectedSample);
             }
+            window.location.href = '/jev/chat.html';
         }
-
-        function addLeftMessage(text) {
-            history.they_said.push(text);
-            const html = `
-                <div class="msg-row left">
-                    <div class="avatar">👨‍💼</div>
-                    <div class="msg-content">
-                        <div class="bubble">${text}</div>
-                    </div>
-                </div>
-            `;
-            chatArea.insertAdjacentHTML('beforeend', html);
-            chatArea.scrollTop = chatArea.scrollHeight;
-        }
-
-        function addRightMessage(text) {
-            history.me_said.push(text);
-            const html = `
-                <div class="msg-row right">
-                    <div class="avatar">😺</div>
-                    <div class="msg-content">
-                        <div class="bubble">${text}</div>
-                    </div>
-                </div>
-            `;
-            chatArea.insertAdjacentHTML('beforeend', html);
-            chatArea.scrollTop = chatArea.scrollHeight;
-        }
-
-        function addJevCard(analysis) {
-            const riskEmoji = analysis.risk_level === 'safe' ? '🟢' :
-                             analysis.risk_level === 'slightly_risky' ? '🟡' :
-                             analysis.risk_level === 'risky' ? '🟠' : '🔴';
-
-            const html = `
-                <div class="jev-card">
-                    <div class="jev-title">Jev 实时分析</div>
-                    <div class="jev-line">语气冲吗？</div>
-                    <div class="jev-line">- 不冲：${((1 - analysis.too_rude) * 100).toFixed(0)}%</div>
-                    <div class="jev-line">- 有点冲：<span class="${analysis.too_rude > 0.6 ? 'jev-highlight' : ''}">${(analysis.too_rude * 100).toFixed(0)}%</span></div>
-                    <div class="jev-line">风险等级：${riskEmoji} ${analysis.risk_level}</div>
-                    <div class="jev-line">合适程度：${analysis.appropriateness}</div>
-                    <div class="jev-suggestion">💡 ${analysis.feedback}</div>
-                </div>
-            `;
-            chatArea.insertAdjacentHTML('beforeend', html);
-            chatArea.scrollTop = chatArea.scrollHeight;
-        }
-
-        function addTyping() {
-            const html = `<div class="typing">对方正在输入<span class="typing-dots"><span>.</span><span>.</span><span>.</span></span></div>`;
-            chatArea.insertAdjacentHTML('beforeend', html);
-            chatArea.scrollTop = chatArea.scrollHeight;
-        }
-
-        function removeTyping() {
-            const typing = chatArea.querySelector('.typing');
-            if (typing) typing.remove();
-        }
-
-        async function sendMessage() {
-            const text = inputMsg.value.trim();
-            if (!text) return;
-
-            inputMsg.value = '';
-
-            // 1. 显示我的消息
-            addRightMessage(text);
-
-            // 2. Jev 分析我的回复
-            const analysis = await analyzeWithJev(text);
-            addJevCard(analysis);
-
-            // 3. 模拟对方回复
-            setTimeout(() => {
-                addTyping();
-                setTimeout(() => {
-                    removeTyping();
-                    if (replyIndex < theirReplies.length) {
-                        addLeftMessage(theirReplies[replyIndex++]);
-                    } else {
-                        addLeftMessage("好的，就先这样！");
-                    }
-                }, 1500);
-            }, 800);
-        }
-
-        inputMsg.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') sendMessage();
-        });
-
-        inputMsg.focus();
     </script>
 </body>
 </html>

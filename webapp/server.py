@@ -438,11 +438,20 @@ def analyze_them(req: AnalyzeThemRequest):
     else:
         suggestion = "✅ 正常对话，正常回应就好"
 
+    # 返回详细的概率数据
+    intent_probs = answers.get("their_intent", {}).get("probabilities", {})
+    # 把英文 key 翻成中文
+    intent_probs_cn = {}
+    for k, v in intent_probs.items():
+        intent_probs_cn[intent_map.get(k, k)] = v
+
     return {
         "intent": intent_map.get(intent_key, intent_key),
+        "intent_probabilities": intent_probs_cn,
         "emotion_level": emotion_level,
-        "emotion_score": emotion_val,
+        "emotion_score_percent": round(emotion_val / 3 * 100),
         "is_test": answers.get("is_test", {}).get("noul", 0),
+        "is_test_percent": round(answers.get("is_test", {}).get("noul", 0) * 100),
         "suggestion": suggestion
     }
 

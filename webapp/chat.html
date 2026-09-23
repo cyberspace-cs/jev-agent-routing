@@ -426,12 +426,26 @@
 
         function addThemAnalysisCard(analysis) {
             const isTest = analysis.is_test > 0.6;
+
+            // 生成意图概率列表
+            let intentProbsHtml = '';
+            if (analysis.intent_probabilities) {
+                const sorted = Object.entries(analysis.intent_probabilities)
+                    .sort((a, b) => b[1] - a[1])
+                    .slice(0, 3);
+                intentProbsHtml = sorted.map(([intent, prob], idx) => {
+                    const isTop = idx === 0;
+                    return `<div class="them-line">- ${intent}：<span class="${isTop ? 'them-highlight' : ''}">${(prob * 100).toFixed(0)}%</span></div>`;
+                }).join('');
+            }
+
             const html = `
                 <div class="them-analysis-card">
                     <div class="them-title">🔍 对方心理分析</div>
-                    <div class="them-line">真实意图：${analysis.intent}</div>
-                    <div class="them-line">情绪强度：${analysis.emotion_level}</div>
-                    ${isTest ? `<div class="them-line">⚠️ 送命题概率：<span class="them-highlight">${(analysis.is_test * 100).toFixed(0)}%</span></div>` : ''}
+                    <div class="them-line">真实意图？</div>
+                    ${intentProbsHtml}
+                    <div class="them-line">情绪强度：${analysis.emotion_level}（${analysis.emotion_score_percent || 0}%）</div>
+                    ${isTest ? `<div class="them-line">⚠️ 送命题概率：<span class="them-highlight">${analysis.is_test_percent || 0}%</span></div>` : ''}
                     <div class="them-suggestion">💡 ${analysis.suggestion}</div>
                 </div>`;
             chatArea.insertAdjacentHTML('beforeend', html);

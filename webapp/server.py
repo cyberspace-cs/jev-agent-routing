@@ -58,6 +58,9 @@ class NoulRequest(BaseModel):
 class WechatPolishRequest(BaseModel):
     message: str
     recipient: str = "朋友"
+    role: str = "friend"  # boss/colleague/girlfriend/boyfriend/bestie/bro
+    their_last_message: str = ""  # 对方上一句话
+    conversation_history: list = []  # 完整对话历史
 
 
 # ============ Mock 数据 ============
@@ -193,15 +196,71 @@ def noul(req: NoulRequest):
 
 @app.post("/api/wechat-polish")
 def wechat_polish(req: WechatPolishRequest):
+    # 关系映射
+    role_relations = {
+        "boss": "老板-下属",
+        "colleague": "同事-同事",
+        "girlfriend": "情侣-女友",
+        "boyfriend": "情侣-男友",
+        "bestie": "闺蜜-闺蜜",
+        "bro": "兄弟-兄弟",
+        "friend": "朋友-朋友"
+    }
+    relation = role_relations.get(req.role, "朋友-朋友")
+
+    # 构建对话上下文
+    me_said = req.conversation_history[-5:] if req.conversation_history else []
+    they_said = [req.their_last_message] if req.their_last_message else []
+
     state = {
         "dialogue": {
-            "me_said": [],
-            "they_said": [req.message],
-            "their_latest": req.message,
-            "relation": "老板-下属",
+            "me_said": me_said,
+            "they_said": they_said,
+            "their_latest": req.their_last_message,
+            "relation": relation,
+            "my_reply": req.message
         }
     }
 
+    # 根据不同角色调整分析维度
+    role_specific_questions = {
+        "boss": {
+            "professionalism": {
+                "type": "score",
+                "instructions": "这句话在老板看来够不够专业？会不会显得不成熟？",
+                "criteria": ["很不专业", "不太专业", "还行", "很专业"]
+            },
+            "too_aggressive": {
+                "type": "noul",
+                "instructions": "这句话会不会显得我在顶嘴或甩锅？"
+            }
+        },
+        "girlfriend": {
+            "emotion_understanding": {
+                "type": "score",
+                "instructions": "这句话有没有接住她的情绪？会不会显得很敷衍？",
+                "criteria": ["完全没接住", "有点敷衍", "还行", "很懂她"]
+            },
+            "too_cold": {
+                "type": "noul",
+                "instructions": "这句话会不会显得太冷淡了？"
+            }
+        },
+        "bestie": {
+            "enough_gossip": {
+                "type": "noul",
+                "instructions": "这句话够不够闺蜜感？会不会太正经了？"
+            }
+        },
+        "bro": {
+            "too_serious": {
+                "type": "noul",
+                "instructions": "这句话会不会太正经了？兄弟之间应该更随意一点。"
+            }
+        }
+    }
+
+    # 基础问题（所有角色通用）
     questions = {
         "too_rude": {
             "type": "noul",
@@ -219,7 +278,7 @@ def wechat_polish(req: WechatPolishRequest):
         },
         "appropriateness": {
             "type": "choice",
-            "instructions": "这条消息在这个场景下合适吗？",
+            "instructions": "结合对话上下文，这条消息在这个场景下合适吗？",
             "criteria": {
                 "perfect": "非常合适，直接发",
                 "ok": "还行，可以发",
@@ -228,6 +287,10 @@ def wechat_polish(req: WechatPolishRequest):
             }
         }
     }
+
+    # 加入角色特定问题
+    if req.role in role_specific_questions:
+        questions.update(role_specific_questions[req.role])
 
     answers = call_jev(state, questions)
 
@@ -239,6 +302,12 @@ def wechat_polish(req: WechatPolishRequest):
         "should_send": "dont_send" not in answers.get("appropriateness", {}).get("choice", "ok"),
     }
 
+    # 加入角色特定分析结果
+    if req.role == "boss" and "professionalism" in answers:
+        results["professionalism"] = answers["professionalism"].get("score", 0)
+    if req.role == "girlfriend" and "emotion_understanding" in answers:
+        results["emotion_understanding"] = answers["emotion_understanding"].get("score", 0)
+
     score_val = results["risk_score"]
     if score_val < 0.5:
         results["risk_level"] = "safe"
@@ -249,12 +318,27 @@ def wechat_polish(req: WechatPolishRequest):
     else:
         results["risk_level"] = "very_risky"
 
+    # 生成更灵活的反馈
     if not results["should_send"]:
         results["feedback"] = f"⚠️ 千万别发！这条给{req.recipient}的消息风险太高了。"
+    elif req.role == "boss":
+        if results.get("professionalism", 0) < 1.5:
+            results["feedback"] = "💡 这句话在老板看来不够专业，建议更正式一点。"
+        elif results["too_rude"] > 0.6:
+            results["feedback"] = "💡 语气有点冲，别在老板面前顶嘴。"
+        else:
+            results["feedback"] = "✅ 没问题，很得体。"
+    elif req.role == "girlfriend":
+        if results.get("emotion_understanding", 0) < 1.5:
+            results["feedback"] = "💡 没接住她的情绪！先共情，再讲道理。"
+        elif results["too_rude"] > 0.6:
+            results["feedback"] = "💡 语气太冲了！对女友要温柔。"
+        else:
+            results["feedback"] = "✅ 可以，挺懂她的。"
     elif results["too_rude"] > 0.6:
         results["feedback"] = f"💡 这句话语气有点冲，建议委婉一点。"
     elif "needs_polish" in results["appropriateness"]:
-        results["feedback"] = f"✨ 意思没问题，但可以润色得更得体一点。"
+        results["feedback"] = f"✨ 意思没问题，但可以润色得更自然一点。"
     else:
         results["feedback"] = f"✅ 没问题，直接发吧！"
 

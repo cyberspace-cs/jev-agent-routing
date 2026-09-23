@@ -255,6 +255,13 @@
         const currentSample = roleSamples[role.id]?.[sampleIdx] || { initial: "你好", replies: ["你好！"] };
         let replyIdx = 0;
 
+        // 对话历史
+        const chatHistory = {
+            me_said: [],
+            they_said: []
+        };
+        let lastTheirMessage = currentSample.initial;
+
         // 对方先发第一条
         setTimeout(() => {
             addLeftMessage(currentSample.initial);
@@ -265,7 +272,13 @@
                 const resp = await fetch('/jev/api/wechat-polish', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ message, recipient: role.name || '朋友' })
+                    body: JSON.stringify({
+                        message,
+                        recipient: role.name || '朋友',
+                        role: role.id || 'friend',
+                        their_last_message: lastTheirMessage,
+                        conversation_history: chatHistory.me_said.slice(-5)
+                    })
                 });
                 return await resp.json();
             } catch (e) {
@@ -303,12 +316,30 @@
             const riskEmoji = analysis.risk_level === 'safe' ? '🟢' :
                              analysis.risk_level === 'slightly_risky' ? '🟡' :
                              analysis.risk_level === 'risky' ? '🟠' : '🔴';
+
+            let roleSpecificHtml = '';
+            // 老板角色：显示专业度
+            if (analysis.professionalism !== undefined) {
+                const profScore = (analysis.professionalism / 3 * 100).toFixed(0);
+                roleSpecificHtml += `
+                    <div class="jev-line">专业度：${profScore}%</div>
+                `;
+            }
+            // 女友角色：显示情绪理解度
+            if (analysis.emotion_understanding !== undefined) {
+                const emoScore = (analysis.emotion_understanding / 3 * 100).toFixed(0);
+                roleSpecificHtml += `
+                    <div class="jev-line">情绪理解：${emoScore}%</div>
+                `;
+            }
+
             const html = `
                 <div class="jev-card">
-                    <div class="jev-title">Jev 实时分析</div>
+                    <div class="jev-title">Jev 实时分析（针对${role.name || '对话'}）</div>
                     <div class="jev-line">语气冲吗？</div>
                     <div class="jev-line">- 不冲：${((1 - analysis.too_rude) * 100).toFixed(0)}%</div>
                     <div class="jev-line">- 有点冲：<span class="${analysis.too_rude > 0.6 ? 'jev-highlight' : ''}">${(analysis.too_rude * 100).toFixed(0)}%</span></div>
+                    ${roleSpecificHtml}
                     <div class="jev-line">风险等级：${riskEmoji} ${analysis.risk_level}</div>
                     <div class="jev-line">合适程度：${analysis.appropriateness}</div>
                     <div class="jev-suggestion">💡 ${analysis.feedback}</div>
@@ -334,6 +365,8 @@
             inputMsg.value = '';
 
             addRightMessage(text);
+            chatHistory.me_said.push(text);
+
             const analysis = await analyzeWithJev(text);
             addJevCard(analysis);
 
@@ -341,11 +374,15 @@
                 addTyping();
                 setTimeout(() => {
                     removeTyping();
+                    let nextMsg;
                     if (replyIdx < currentSample.replies.length) {
-                        addLeftMessage(currentSample.replies[replyIdx++]);
+                        nextMsg = currentSample.replies[replyIdx++];
                     } else {
-                        addLeftMessage("好的，就先这样吧！");
+                        nextMsg = "好的，就先这样吧！";
                     }
+                    addLeftMessage(nextMsg);
+                    chatHistory.they_said.push(nextMsg);
+                    lastTheirMessage = nextMsg;
                 }, 1200);
             }, 500);
         }

@@ -262,12 +262,28 @@
                 {
                     initial: "哎，那个需求你那边做完了吗？",
                     replies: ["客户那边催了好几次了。", "哦，对了，还要改个接口。"]
+                },
+                {
+                    initial: "这个 bug 你那边复现了吗？",
+                    replies: ["客户那边说又出现了。", "你看看是不是你改的地方导致的？"]
+                },
+                {
+                    initial: "下周评审，你准备一下材料。",
+                    replies: ["老板说要重点看你的部分。", "PPT 记得提前发我看一下。"]
                 }
             ],
             boyfriend: [
                 {
                     initial: "宝宝，我今天加班呢。",
                     replies: ["晚上不回去吃饭了。", "你先吃吧，别等我了。"]
+                },
+                {
+                    initial: "我打游戏呢，晚点说。",
+                    replies: ["就一把！打完就陪你。", "别生气别生气，我错了。"]
+                },
+                {
+                    initial: "你说我这件衣服好看吗？",
+                    replies: ["就是上次买的那件。", "你根本就没认真看！"]
                 }
             ]
         };
@@ -284,8 +300,12 @@
         let lastTheirMessage = currentSample.initial;
 
         // 对方先发第一条
-        setTimeout(() => {
+        setTimeout(async () => {
             addLeftMessage(currentSample.initial);
+            chatHistory.they_said.push(currentSample.initial);
+            // 第一条消息也要分析
+            const theirAnalysis = await analyzeThem(currentSample.initial);
+            addThemAnalysisCard(theirAnalysis);
         }, 300);
 
         async function analyzeWithJev(message) {

@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<meta http-equiv="Pragma" content="no-cache">
-<meta http-equiv="Expires" content="0">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>微信 - Jev 低情商救星</title>
     <style>
         * {
@@ -29,7 +29,6 @@
             flex-direction: column;
             position: relative;
         }
-        /* 状态栏 */
         .status-bar {
             height: 24px;
             background: #ededed;
@@ -41,7 +40,6 @@
             font-weight: 600;
             color: #000;
         }
-        /* 导航栏 */
         .nav-bar {
             height: 44px;
             background: #ededed;
@@ -68,7 +66,6 @@
             color: #000;
             letter-spacing: 2px;
         }
-        /* 聊天区 */
         .chat-area {
             flex: 1;
             overflow-y: auto;
@@ -77,79 +74,67 @@
             flex-direction: column;
             gap: 12px;
         }
-        /* 消息行 */
         .msg-row {
             display: flex;
             gap: 8px;
             align-items: flex-start;
+            animation: fadeIn 0.3s ease;
         }
-        .msg-row.left {
-            flex-direction: row;
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
-        .msg-row.right {
-            flex-direction: row-reverse;
-        }
+        .msg-row.left { flex-direction: row; }
+        .msg-row.right { flex-direction: row-reverse; }
         .avatar {
             width: 38px;
             height: 38px;
             border-radius: 6px;
             flex-shrink: 0;
-            background: #ccc;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 18px;
+            font-size: 20px;
         }
-        .msg-content {
-            max-width: 70%;
-        }
+        .msg-row.left .avatar { background: #4CAF50; }
+        .msg-row.right .avatar { background: #2196F3; }
+        .msg-content { max-width: 70%; }
         .bubble {
             padding: 10px 12px;
             border-radius: 6px;
             font-size: 16px;
             line-height: 1.4;
-            position: relative;
             word-break: break-word;
+            position: relative;
         }
-        .msg-row.left .bubble {
-            background: #fff;
-            color: #000;
-        }
-        .msg-row.right .bubble {
-            background: #95ec69;
-            color: #000;
-        }
-        /* Jev 分析卡片 */
+        .msg-row.left .bubble { background: #fff; color: #000; }
+        .msg-row.right .bubble { background: #95ec69; color: #000; }
         .jev-card {
             max-width: 75%;
-            background: #f2f2f2;
-            border-radius: 8px;
-            padding: 12px 14px;
+            background: #fff3e0;
+            border-left: 3px solid #ff9800;
+            border-radius: 4px;
+            padding: 10px 12px;
             font-size: 13px;
             color: #333;
             line-height: 1.6;
             margin: 4px 0 0 46px;
+            animation: fadeIn 0.4s ease;
         }
         .jev-card .jev-title {
             font-weight: 600;
             margin-bottom: 6px;
-            color: #1a1a1a;
+            color: #e65100;
         }
-        .jev-card .jev-line {
-            margin: 2px 0;
-        }
-        .jev-card .jev-highlight {
-            color: #e64340;
-            font-weight: 600;
-        }
+        .jev-card .jev-line { margin: 2px 0; }
+        .jev-card .jev-highlight { color: #e64340; font-weight: 600; }
         .jev-card .jev-suggestion {
             margin-top: 6px;
             padding-top: 6px;
-            border-top: 0.5px solid #ddd;
-            color: #1a1a1a;
+            border-top: 1px dashed #ffcc80;
+            color: #e65100;
             font-weight: 500;
         }
-        /* 输入栏 */
         .input-bar {
             height: 56px;
             background: #f7f7f7;
@@ -189,66 +174,44 @@
             font-size: 15px;
             font-weight: 500;
         }
-        .send-btn:active {
-            background: #06ad56;
-        }
-        /* 打字中 */
+        .send-btn:active { background: #06ad56; }
         .typing {
             font-size: 13px;
             color: #999;
             font-style: italic;
         }
+        .typing-dots span {
+            animation: blink 1.4s infinite both;
+        }
+        .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes blink {
+            0% { opacity: 0.2; }
+            20% { opacity: 1; }
+            100% { opacity: 0.2; }
+        }
     </style>
 </head>
 <body>
     <div class="phone">
-        <!-- 状态栏 -->
         <div class="status-bar">
-            <span>18:01</span>
+            <span>18:30</span>
             <span>📶 📡 🔋</span>
         </div>
 
-        <!-- 导航栏 -->
         <div class="nav-bar">
             <span class="back">‹</span>
             <span class="title">老板</span>
             <span class="more">···</span>
         </div>
 
-        <!-- 聊天区 -->
         <div class="chat-area" id="chatArea">
-            <!-- 初始消息 -->
-            <div class="msg-row left">
-                <div class="avatar">👨‍💼</div>
-                <div class="msg-content">
-                    <div class="bubble">在吗？有个小需求。</div>
-                </div>
-            </div>
-
-            <div class="jev-card">
-                <div class="jev-title">Jev：</div>
-                <div class="jev-line">"小需求"真的小吗？</div>
-                <div class="jev-line">- 是：<span class="jev-highlight">2%</span></div>
-                <div class="jev-line">- 否：98%</div>
-                <div class="jev-line">预计影响</div>
-                <div class="jev-line">- 改个颜色：3%</div>
-                <div class="jev-line">- 重写半个项目：97%</div>
-                <div class="jev-line">危险等级：<span class="jev-highlight">9 / 10</span></div>
-                <div class="jev-suggestion">建议动作：先问清楚是什么需求，别说"好的"。</div>
-            </div>
-
-            <div class="msg-row right">
-                <div class="avatar">😺</div>
-                <div class="msg-content">
-                    <div class="bubble">在的，您说。</div>
-                </div>
-            </div>
+            <!-- 对话会动态加载 -->
         </div>
 
-        <!-- 输入栏 -->
         <div class="input-bar">
             <div class="icon-btn">🎤</div>
-            <input type="text" id="inputMsg" placeholder="">
+            <input type="text" id="inputMsg" placeholder="发送消息...">
             <div class="icon-btn">😊</div>
             <div class="icon-btn">➕</div>
             <button class="send-btn" onclick="sendMessage()">发送</button>
@@ -259,24 +222,47 @@
         const chatArea = document.getElementById('chatArea');
         const inputMsg = document.getElementById('inputMsg');
 
-        // 模拟 Jev 分析
-        async function analyzeWithJev(message, recipient = "老板") {
+        // 对话历史
+        const history = {
+            me_said: [],
+            they_said: []
+        };
+
+        // 对方回复库（模拟微信对话）
+        const theirReplies = [
+            "在吗？有个小需求。",
+            "这个需求很简单，就是改个颜色。",
+            "什么时候能做完？",
+            "哦，对了，还要加个导出功能。",
+            "这个效果不对啊，能不能调一下？",
+            "客户说还要支持手机端。",
+            "你看看能不能今天搞定？",
+            "刚才那个需求不用做了。",
+            "辛苦了，请你吃饭！"
+        ];
+        let replyIndex = 0;
+
+        // 对方先发消息
+        setTimeout(() => {
+            addLeftMessage(theirReplies[replyIndex++]);
+        }, 500);
+
+        async function analyzeWithJev(message) {
             try {
                 const resp = await fetch('/jev/api/wechat-polish', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({
                         message: message,
-                        recipient: recipient
+                        recipient: "老板"
                     })
                 });
                 return await resp.json();
             } catch (e) {
-                // 本地 mock，离线也能演示
                 return {
-                    too_rude: Math.random() * 0.5,
-                    risk_level: ['safe', 'slightly_risky', 'risky', 'very_risky'][Math.floor(Math.random() * 3)],
-                    appropriateness: ['perfect', 'ok', 'needs_polish', 'dont_send'][Math.floor(Math.random() * 3)],
+                    too_rude: Math.random() * 0.3,
+                    risk_level: 'safe',
+                    appropriateness: 'ok',
                     should_send: true,
                     feedback: "（本地演示模式）"
                 };
@@ -284,6 +270,7 @@
         }
 
         function addLeftMessage(text) {
+            history.they_said.push(text);
             const html = `
                 <div class="msg-row left">
                     <div class="avatar">👨‍💼</div>
@@ -297,6 +284,7 @@
         }
 
         function addRightMessage(text) {
+            history.me_said.push(text);
             const html = `
                 <div class="msg-row right">
                     <div class="avatar">😺</div>
@@ -316,13 +304,13 @@
 
             const html = `
                 <div class="jev-card">
-                    <div class="jev-title">Jev：</div>
+                    <div class="jev-title">Jev 实时分析</div>
                     <div class="jev-line">语气冲吗？</div>
                     <div class="jev-line">- 不冲：${((1 - analysis.too_rude) * 100).toFixed(0)}%</div>
                     <div class="jev-line">- 有点冲：<span class="${analysis.too_rude > 0.6 ? 'jev-highlight' : ''}">${(analysis.too_rude * 100).toFixed(0)}%</span></div>
                     <div class="jev-line">风险等级：${riskEmoji} ${analysis.risk_level}</div>
                     <div class="jev-line">合适程度：${analysis.appropriateness}</div>
-                    <div class="jev-suggestion">建议：${analysis.feedback}</div>
+                    <div class="jev-suggestion">💡 ${analysis.feedback}</div>
                 </div>
             `;
             chatArea.insertAdjacentHTML('beforeend', html);
@@ -330,7 +318,7 @@
         }
 
         function addTyping() {
-            const html = `<div class="typing">Jev 正在分析...</div>`;
+            const html = `<div class="typing">对方正在输入<span class="typing-dots"><span>.</span><span>.</span><span>.</span></span></div>`;
             chatArea.insertAdjacentHTML('beforeend', html);
             chatArea.scrollTop = chatArea.scrollHeight;
         }
@@ -346,25 +334,32 @@
 
             inputMsg.value = '';
 
-            // 1. 先显示我的消息
+            // 1. 显示我的消息
             addRightMessage(text);
 
-            // 2. Jev 分析
-            addTyping();
+            // 2. Jev 分析我的回复
             const analysis = await analyzeWithJev(text);
-            removeTyping();
             addJevCard(analysis);
+
+            // 3. 模拟对方回复
+            setTimeout(() => {
+                addTyping();
+                setTimeout(() => {
+                    removeTyping();
+                    if (replyIndex < theirReplies.length) {
+                        addLeftMessage(theirReplies[replyIndex++]);
+                    } else {
+                        addLeftMessage("好的，就先这样！");
+                    }
+                }, 1500);
+            }, 800);
         }
 
-        // 回车发送
         inputMsg.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') sendMessage();
         });
 
-        // 自动聚焦
         inputMsg.focus();
     </script>
 </body>
 </html>
-
-
